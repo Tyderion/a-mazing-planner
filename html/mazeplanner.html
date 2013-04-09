@@ -6,9 +6,11 @@
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script src="../vendor/jcanvas.min.js" ></script>
   <script src="../vendor/jquery.mousewheel.js" ></script>
-  // <script src="http://jashkenas.github.io/coffee-script/extras/coffee-script.js"></script> // Maybe use this instead of compiling?
-	<script src="start.js"></script>
-	<script src="mazeplanner.js" async></script>
+
+  <!-- Compiling Coffeescript in browser, reverse order ^^ -->
+  <script src="http://jashkenas.github.io/coffee-script/extras/coffee-script.js"></script>
+  <script src="mazeplanner.coffee" type="text/coffeescript" async></script>
+	<script src="start.coffee" type="text/coffeescript"></script>
 </head>
 <body>
 <canvas id="drawing" ></canvas>
