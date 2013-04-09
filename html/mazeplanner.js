@@ -23,7 +23,11 @@
 
             _results1 = [];
             for (col = _j = 0; 0 <= width ? _j <= width : _j >= width; col = 0 <= width ? ++_j : --_j) {
-              _results1.push(0);
+              if (Math.random() > 0.3) {
+                _results1.push(0);
+              } else {
+                _results1.push(1);
+              }
             }
             return _results1;
           })());
@@ -56,7 +60,7 @@
     };
 
     Game.prototype.drawGrid = function(x, y, steps) {
-      var i, j, vertsteps, _results;
+      var i, j, start, vertsteps, _i, _results;
 
       console.log("Drawing grid");
       vertsteps = (this.height / this.width) * steps;
@@ -72,8 +76,8 @@
         height: this.height,
         fromCenter: false
       });
-      i = 0;
       console.log("Widht: " + this.width + " and height: " + this.height);
+      i = 0;
       while (i < this.width) {
         $("canvas").drawLine({
           layer: true,
@@ -89,7 +93,6 @@
         i += this.width / steps;
       }
       j = 0;
-      _results = [];
       while (j < this.height) {
         $("canvas").drawLine({
           layer: true,
@@ -102,7 +105,40 @@
           x2: this.width,
           y2: j
         });
-        _results.push(j += this.height / vertsteps);
+        j += this.height / vertsteps;
+      }
+      start = window.gridsize / 2;
+      _results = [];
+      for (x = _i = 0; 0 <= steps ? _i <= steps : _i >= steps; x = 0 <= steps ? ++_i : --_i) {
+        _results.push((function() {
+          var _j, _results1;
+
+          _results1 = [];
+          for (y = _j = 0; 0 <= vertsteps ? _j <= vertsteps : _j >= vertsteps; y = 0 <= vertsteps ? ++_j : --_j) {
+            if (this.grid[x][y] === 1) {
+              _results1.push($("canvas").drawRect({
+                fillStyle: "#000",
+                x: start + x * gridsize,
+                y: start + y * gridsize,
+                width: start,
+                height: start,
+                fromCenter: true
+              }));
+            } else if (this.grid[x][y] === 2) {
+              _results1.push($("canvas").drawRect({
+                fillStyle: "#686868",
+                x: start + x * gridsize,
+                y: start + y * gridsize,
+                width: 5,
+                height: 5,
+                fromCenter: true
+              }));
+            } else {
+              _results1.push(void 0);
+            }
+          }
+          return _results1;
+        }).call(this));
       }
       return _results;
     };

@@ -18,8 +18,12 @@ $ ->
     window.gridsize = 19
 
     game = new  window.Game(width, height, context)
+
+
+    # Use a timeout to not trigger so often while resizing
     $(window).on "resize", (event) ->
       game.redrawContext()
+
 
     $(window).on "mousewheel", (event, delta, deltaX, deltaY) ->
       if deltaY > 0

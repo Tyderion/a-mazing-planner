@@ -5,9 +5,15 @@ class window.Game
     @width = width
     @height = height
     @context = context
-    @grid = for row in [0..height]
-    	for col in [0..width]
-                0
+    @grid = #[][]
+      for row in [0..height]
+      	for col in [0..width]
+          if Math.random() > 0.3
+            0
+          else
+            1
+          # if Math.random() > 3)
+          #   @grid[row][col] =
     console.log this
     @redrawContext()
 
@@ -39,8 +45,10 @@ class window.Game
       width: @width,
       height: @height,
       fromCenter: false
-    i = 0
+
     console.log "Widht: #{@width} and height: #{@height}"
+
+    i = 0
     while (i < @width)
       $("canvas").drawLine
         layer: true
@@ -52,8 +60,8 @@ class window.Game
         x2: i, y2: @height
       i += (@width/steps)
 
-    j = 0
 
+    j = 0
     while (j < @height)
       $("canvas").drawLine
         layer: true
@@ -64,4 +72,25 @@ class window.Game
         x1: 0, y1: j,
         x2: @width, y2: j
       j += @height/vertsteps
+
+
+    start = window.gridsize/2
+    for x in [0..steps]
+      for y in [0..vertsteps]
+        if @grid[x][y] == 1
+          $("canvas").drawRect
+            fillStyle: "#000"
+            x: start+x*gridsize
+            y: start+y*gridsize
+            width: start
+            height: start
+            fromCenter: true
+        else if @grid[x][y] == 2
+          $("canvas").drawRect
+            fillStyle: "#686868"
+            x: start+x*gridsize
+            y: start+y*gridsize
+            width: 5
+            height: 5
+            fromCenter: true
 
