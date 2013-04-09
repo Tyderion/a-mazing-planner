@@ -15,21 +15,8 @@ $ ->
     context.canvas.height = height;
     window.ok = true
     #Canvas commands go here
-    window.gridsize = 19
-
+    window.gridsize = 20
     game = new  window.Game(width, height, context)
 
-
-    # Use a timeout to not trigger so often while resizing
-    $(window).on "resize", (event) ->
-      game.redrawContext()
-
-
-    $(window).on "mousewheel", (event, delta, deltaX, deltaY) ->
-      if deltaY > 0
-        window.gridsize += deltaY if window.gridsize < 40
-      else
-        window.gridsize += deltaY if window.gridsize > 5
-      game.redrawContext()
 
 

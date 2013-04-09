@@ -13,23 +13,8 @@
       context.canvas.width = width;
       context.canvas.height = height;
       window.ok = true;
-      window.gridsize = 19;
-      game = new window.Game(width, height, context);
-      $(window).on("resize", function(event) {
-        return game.redrawContext();
-      });
-      return $(window).on("mousewheel", function(event, delta, deltaX, deltaY) {
-        if (deltaY > 0) {
-          if (window.gridsize < 40) {
-            window.gridsize += deltaY;
-          }
-        } else {
-          if (window.gridsize > 5) {
-            window.gridsize += deltaY;
-          }
-        }
-        return game.redrawContext();
-      });
+      window.gridsize = 20;
+      return game = new window.Game(width, height, context);
     }
   });
 

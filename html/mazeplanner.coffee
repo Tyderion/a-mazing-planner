@@ -1,5 +1,3 @@
-width = 100
-height = 100
 class window.Game
   constructor: (width, height, context) ->
     @width = width
@@ -8,19 +6,13 @@ class window.Game
     @grid = #[][]
       for row in [0..height]
       	for col in [0..width]
-          if Math.random() > 0.3
-            0
-          else
-            1
-          # if Math.random() > 3)
-          #   @grid[row][col] =
-    console.log this
+          if Math.random() > 0.3 then 0 else 1
+    @createhandlers()
     @redrawContext()
 
 
   redrawContext:  ->
-    # Initaliase a 2-dimensional drawing context
-    console.log "redrawContext"
+
     $("canvas").clearCanvas()
     @checkDims()
     steps = @width/window.gridsize
@@ -29,11 +21,14 @@ class window.Game
     @drawGrid(0,0, steps)
 
   checkDims: ->
-    @width = window.innerWidth if width != window.innerWidth
-    @height = window.innerHeight if height != window.innerheight
+    @width = window.innerWidth if @width != window.innerWidth
+    @height = window.innerHeight if @height != window.innerheight
+
+
+  click: (event) ->
+    console.log event
 
   drawGrid: (x, y, steps) ->
-    console.log "Drawing grid"
     vertsteps = (@height/@width)*steps
     $('canvas').drawRect
       layer: true
@@ -45,8 +40,6 @@ class window.Game
       width: @width,
       height: @height,
       fromCenter: false
-
-    console.log "Widht: #{@width} and height: #{@height}"
 
     i = 0
     while (i < @width)
@@ -74,7 +67,7 @@ class window.Game
       j += @height/vertsteps
 
 
-    start = window.gridsize/2
+    start = 0#window.gridsize/2
     for x in [0..steps]
       for y in [0..vertsteps]
         if @grid[x][y] == 1
@@ -82,15 +75,30 @@ class window.Game
             fillStyle: "#000"
             x: start+x*gridsize
             y: start+y*gridsize
-            width: start
-            height: start
-            fromCenter: true
+            width: gridsize
+            height: gridsize
+            fromCenter: false
         else if @grid[x][y] == 2
           $("canvas").drawRect
             fillStyle: "#686868"
             x: start+x*gridsize
             y: start+y*gridsize
-            width: 5
-            height: 5
-            fromCenter: true
+            width: gridsize
+            height: gridsize
+            fromCenter: false
+
+  createhandlers: ->
+    $(window).on
+      'click': (e) =>
+        @click(e)
+      "resize": (e) =>
+        # Use Timeout....
+        @redrawContext()
+      "mousewheel": (e, delta, deltaX, deltaY) =>
+        # Maybe use timeout too ... or something that just waits until user stops or just updates every second
+        if deltaY > 0
+          window.gridsize += deltaY if window.gridsize < 40
+        else
+          window.gridsize += deltaY if window.gridsize > 5
+        @redrawContext()
 
