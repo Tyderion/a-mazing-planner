@@ -2,6 +2,7 @@ class window.Game
   constructor: (width, height, context, cellsX, cellsY, string) ->
     @width = width
     @height = height
+    #TODO: Use cellsX/Y instead of width/height to generate grid (and other stuff) concerning the cells and not the pixels.
     @cellX = cellsX
     @cellsY = cellsY
     @context = context
