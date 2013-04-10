@@ -15,14 +15,15 @@ $ ->
     context.canvas.height = height;
     window.ok = true
     #Canvas commands go here
-    window.gridsize = width/8#20
+    window.gridsize = 50#20
 
     if $.cookie('test') != ""
       str = $.cookie('test')
       console.log "Loaded cookie: #{str}"
     else
       str = ""
-    game = new  window.Game(width, height, context,10,10, str)
+    console.log "Gridsize: #{window.gridsize}"
+    game = new  window.Game(width, height, context,20,20, str)
 
 
 

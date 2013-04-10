@@ -1,21 +1,28 @@
 class window.Game
+  @game
+  @it: ->
+    return @game
+
+
+
   constructor: (width, height, context, cellsX, cellsY, string) ->
     @width = width
     @height = height
     #TODO: Use cellsX/Y instead of width/height to generate grid (and other stuff) concerning the cells and not the pixels.
-    @cellX = cellsX
+    @cellsX = cellsX
     @cellsY = cellsY
     @context = context
-    @grid = #[][]
+    @constructor.game = this
     @test = []
     @timeout = 0
     @counter = 0
     @string = string
-    @grid = for row in [0..width]
-      	for col in [0..height]
+    @grid = for row in [0..cellsX]
+      	for col in [0..cellsY]
           0#if Math.random() > 0.3 then 0 else 1
+    console.log @grid
     @createhandlers()
-    @load() if @string != ""
+    #@load() if @string != ""
     @redrawContext()
 
 
@@ -24,8 +31,9 @@ class window.Game
 
   save: ->
     @createString()
-    console.log "Saving string as cookie!"
-    $.cookie('test', "110000011")
+    # console.log "Saving string as cookie!"
+    $.cookie "test", @string,
+      path: "/"
     console.log "Saved"
 
   load: ->
@@ -38,17 +46,20 @@ class window.Game
 
 
   readString: ->
-    for i in [0..@width]
-      for j in [0..@height]
-        if i*@width+j > @string.length
-          @grid[i][j] = 0
-        else
-          @grid[i][j] = @string[i*@width+j]
+    @grid = for row in [0..cellsX]
+        for col in [0..cellsY]
+          0#if Math.random() >
+    # for i in [0..@cellsX]
+    #   for j in [0..@cellsY]
+    #     if i*@cellsX+j >= @string.length
+    #       @grid[i][j] = 0
+    #     else
+    #       @grid[i][j] = @string[i*@cellsX+j]
 
   createString: ->
     @string = ""
-    for i in [0..@width]
-      for j in [0..@height]
+    for i in [0..@cellsX]
+      for j in [0..@cellsY]
         @string += @grid[i][j]
     matches = @string.match(new RegExp('1', "g"))
     length = matches.length unless matches is null
@@ -65,10 +76,9 @@ class window.Game
     # console.log "Redrawing Context!"
     $("canvas").clearCanvas()
     @checkDims()
-    steps = @width/window.gridsize
     @context.canvas.width  = @width;
     @context.canvas.height = @height;
-    @drawGrid(0,0, steps)
+    @drawGrid(0,0)
     @timeout = 0
 
   checkDims: ->
@@ -80,12 +90,13 @@ class window.Game
   # Return true if the block at x,y is or can be the topleft cell of a tower
   checkValidity: (x,y) =>
     # If its outside, it is not valid xD
-    return false if (x< 0 or y < 0 or x > @width or y > @height)
-    index = x*@width+y
+    return false if (x< 0 or y < 0 or x >= @cellsX or y >= @cellsY)
+    index = x*@cellsX+y
     # If we already calculated the value, just return this one
     unless @test[index]  is undefined
       return @test[index]
     current = @grid[x][y]
+    console.log "Current: #{current}"
     # If all 4 are empty, tower can be placed
     if @grid[x+1][y] == @grid[x][y+1] == @grid[x+1][y+1] == current
       if current == 0
@@ -97,6 +108,7 @@ class window.Game
         @test[index] = true if @test[index] is undefined
     else
      @test[index] = false
+    console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
     return @test[index]
 
   click: (event) ->
@@ -104,7 +116,7 @@ class window.Game
     @counter = 0
     x = Math.floor( event.clientX / window.gridsize)
     y = Math.floor( event.clientY / window.gridsize)
-
+    # console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
     current = @grid[x][y]
     if current <= 2
       newval = @grid[x][y]*-1 +1 #Swap 0 and 1
@@ -115,8 +127,12 @@ class window.Game
       @redrawContext()
     @save()
 
-  drawGrid: (x, y, steps) ->
+
+  drawGrid: (x,y) ->
+    steps = @width/window.gridsize
     vertsteps = (@height/@width)*steps
+
+    console.log "Steps: #{steps}"
     $('canvas').drawRect
       layer: true
       name: "border"
@@ -129,6 +145,7 @@ class window.Game
       fromCenter: false
 
     i = 0
+    counter = 0
     while (i < @width)
       $("canvas").drawLine
         layer: true
@@ -138,10 +155,13 @@ class window.Game
         strokeWidth: 1,
         x1: i, y1: 0,
         x2: i, y2: @height
+      counter++
+      break if (counter > @cellsX)
       i += (@width/steps)
 
 
     j = 0
+    counter = 0
     while (j < @height)
       $("canvas").drawLine
         layer: true
@@ -151,25 +171,34 @@ class window.Game
         strokeWidth: 1,
         x1: 0, y1: j,
         x2: @width, y2: j
+      counter++
+      break if (counter > @cellsX)
       j += @height/vertsteps
 
 
     start = 0#window.gridsize/2
-    for x in [0..steps]
-      for y in [0..vertsteps]
+
+    console.log "cellsX: #{@cellsX} and cellsy: #{@cellsY}"
+    @createString()
+    console.log @string
+    gridsize = window.gridsize
+    for x in [0..@cellsX]
+      for y in [0..@cellsY]
+        xcoord= x*gridsize
+        ycoord = y*gridsize
         if @grid[x][y] == 1
           $("canvas").drawRect
             fillStyle: "#000"
-            x: start+x*gridsize
-            y: start+y*gridsize
+            x: xcoord
+            y: ycoord
             width: gridsize
             height: gridsize
             fromCenter: false
         else if @grid[x][y] == 2
           $("canvas").drawRect
             fillStyle: "#686868"
-            x: start+x*gridsize
-            y: start+y*gridsize
+            x: xcoord
+            y: ycoord
             width: gridsize
             height: gridsize
             fromCenter: false
