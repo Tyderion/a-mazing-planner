@@ -4,29 +4,42 @@ class window.Game
     @height = height
     @context = context
     @grid = #[][]
-      for row in [0..height]
+    @timeout = 0
+    @grid = for row in [0..height]
       	for col in [0..width]
-          if Math.random() > 0.3 then 0 else 1
+          0#if Math.random() > 0.3 then 0 else 1
     @createhandlers()
     @redrawContext()
 
 
-  redrawContext:  ->
-
+  redrawContext:  =>
+    console.log "Redrawing Context!"
     $("canvas").clearCanvas()
     @checkDims()
     steps = @width/window.gridsize
     @context.canvas.width  = @width;
     @context.canvas.height = @height;
     @drawGrid(0,0, steps)
+    @timeout = 0
 
   checkDims: ->
     @width = window.innerWidth if @width != window.innerWidth
     @height = window.innerHeight if @height != window.innerheight
 
 
+
   click: (event) ->
-    console.log event
+    x = Math.floor event.clientX / window.gridsize
+    y = Math.floor event.clientY / window.gridsize
+    current = @grid[x][y]
+    if current == 0 or current == 1
+      newval = @grid[x][y]*-1 +1 #Swap 0 and 1
+      if @grid[x+1][y] == @grid[x][y+1] == @grid[x+1][y+1] == current
+        for i in [x..x+1]
+          for j in [y..y+1]
+            @grid[i][j] = newval
+      # @grid[x][y] = newval
+      @redrawContext()
 
   drawGrid: (x, y, steps) ->
     vertsteps = (@height/@width)*steps
@@ -93,12 +106,13 @@ class window.Game
         @click(e)
       "resize": (e) =>
         # Use Timeout....
-        @redrawContext()
+        @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
+
       "mousewheel": (e, delta, deltaX, deltaY) =>
         # Maybe use timeout too ... or something that just waits until user stops or just updates every second
         if deltaY > 0
-          window.gridsize += deltaY if window.gridsize < 40
+          window.gridsize += 1 if window.gridsize < 40
         else
-          window.gridsize += deltaY if window.gridsize > 5
-        @redrawContext()
-
+          window.gridsize -= 1 if window.gridsize > 5
+        if @timeout <= 0
+          @timeout = window.setTimeout(@redrawContext, 20)
