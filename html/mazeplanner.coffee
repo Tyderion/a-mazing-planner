@@ -40,6 +40,7 @@ class window.Game
 
   # Return true if the block at x,y is or can be the topleft cell of a tower
   checkValidity: (x,y) =>
+    console.log "Testing (#{x},#{y})"
     return false if (x< 0 or y < 0 or x > @width or y > @height)
     index = x*@width+y
     unless @test[index]  is  undefined
@@ -57,22 +58,16 @@ class window.Game
       else
         # Tower can be placed if the rest of the black fields are only towers
         #TODO: from a vertical 2x4 space can the middle be removed
-        h = -1
-        v = -1
-        while h <= 1
-          while v <= 1
+
+        for h in [-1..1]
+          for v in [-1..1]
             unless h == 0 and v == 0
-              # if @grid[x+h][y+v] == 0
-              #   console.log "#{x+h}#{y+v} ok "
-              #   @test[index] = true
-              # else if @grid[x+h][y+v] == 1
-              #   console.log "#{x+h}#{y+v} which depends on ..."
+              console.log "Offset (#{h},#{v})"
               if @checkValidity(x+h, y+v)
                 @test[index] = false
                 break
-            # break unless @test[index]
-            v++
-          h++
+          break unless @test[index]
+
         @test[index] = true if @test[index] is undefined
     else
      @test[index] = false
@@ -91,9 +86,8 @@ class window.Game
     current = @grid[x][y]
     if current <= 2
       newval = @grid[x][y]*-1 +1 #Swap 0 and 1
-      valid = @checkValidity(x,y)
       # console.log "This click is valid? #{valid}"
-      if valid
+      if @checkValidity(x,y)
         for i in [x..x+1]
           for j in [y..y+1]
             @grid[i][j] = newval
