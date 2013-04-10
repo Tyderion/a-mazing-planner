@@ -40,16 +40,20 @@ class window.Game
 
   # Return true if the block at x,y is or can be the topleft cell of a tower
   checkValidity: (x,y) =>
-    console.log "Testing (#{x},#{y})"
     return false if (x< 0 or y < 0 or x > @width or y > @height)
     index = x*@width+y
-    unless @test[index]  is  undefined
+    unless @test[index]  is undefined
       return @test[index]
+
+
     @counter += 1
     if @counter > 50
       console.log "STOPPING TOO MUCH RECURSION!!!!"
       return false
+
+
     current = @grid[x][y]
+
     # If all 4 are empty, tower can be placed
     console.log "Validity of #{x}#{y}  depends on ..."
     if @grid[x+1][y] == @grid[x][y+1] == @grid[x+1][y+1] == current
@@ -57,17 +61,8 @@ class window.Game
         @test[index] = true
       else
         # Tower can be placed if the rest of the black fields are only towers
-        #TODO: from a vertical 2x4 space can the middle be removed
-
-        for h in [-1..1]
-          for v in [-1..1]
-            unless h == 0 and v == 0
-              console.log "Offset (#{h},#{v})"
-              if @checkValidity(x+h, y+v)
-                @test[index] = false
-                break
-          break unless @test[index]
-
+        if @checkValidity(x-1, y) or @checkValidity(x, y-1) or @checkValidity(x-1, y-1)
+          @test[index] = false
         @test[index] = true if @test[index] is undefined
     else
      @test[index] = false
