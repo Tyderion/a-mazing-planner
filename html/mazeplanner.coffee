@@ -5,6 +5,8 @@ class window.Game
 
 
 
+
+
   constructor: (width, height, context, cellsX, cellsY, string) ->
     @width = width
     @height = height
@@ -16,6 +18,9 @@ class window.Game
     @test = []
     @timeout = 0
     @counter = 0
+    @rec_width = 0
+    @rec_height = 0
+
     @string = string
     @grid = for row in [0..@cellsX]
       	for col in [0..@cellsY]
@@ -109,19 +114,20 @@ class window.Game
 
   click: (event) ->
     @test = []
-    @counter = 0
-    x = Math.floor( event.clientX / window.gridsize)
-    y = Math.floor( event.clientY / window.gridsize)
-    # console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
-    current = @grid[x][y]
-    if current <= 2
-      newval = @grid[x][y]*-1 +1 #Swap 0 and 1
-      if @checkValidity(x,y)
-        for i in [x..x+1]
-          for j in [y..y+1]
-            @grid[i][j] = newval
-      @redrawContext()
-    @save()
+    # console.log "@rec_width >= event.clientX: #{@rec_width} >= #{event.clientY}"
+    if @rec_width >= event.clientX and @rec_height >= event.clientY
+      x = Math.floor( event.clientX / window.gridsize)
+      y = Math.floor( event.clientY / window.gridsize)
+      # console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
+      current = @grid[x][y]
+      if current <= 2
+        newval = @grid[x][y]*-1 +1 #Swap 0 and 1
+        if @checkValidity(x,y)
+          for i in [x..x+1]
+            for j in [y..y+1]
+              @grid[i][j] = newval
+        @redrawContext()
+      @save()
 
 
   drawGrid: (x,y) ->
@@ -129,8 +135,8 @@ class window.Game
     vertsteps = (@height/@width)*steps
 
     # console.log "Steps: #{steps}"
-    rec_width = Math.min (@width/steps)*(@cellsX+1), @width
-    rec_height = Math.min (@height/vertsteps)*(@cellsY+1), @height
+    @rec_width = Math.min (@width/steps)*(@cellsX+1), @width
+    @rec_height = Math.min (@height/vertsteps)*(@cellsY+1), @height
     $('canvas').drawRect
       layer: true
       name: "border"
@@ -138,15 +144,15 @@ class window.Game
       strokeStyle: "#000",
       strokeWidth: 2
       x: x, y: y,
-      width: rec_width
-      height: rec_height
+      width: @rec_width
+      height: @rec_height
       fromCenter: false
 
 
 
     i = 0
     # counter = 0
-    while (i < rec_width)
+    while (i < @rec_width)
       $("canvas").drawLine
         layer: true
         name: "vline#{i}"
@@ -154,7 +160,7 @@ class window.Game
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
         x1: i, y1: 0,
-        x2: i, y2: rec_height
+        x2: i, y2: @rec_height
       # counter++
       # break if (counter > @cellsX)
       i += (@width/steps)
@@ -162,7 +168,7 @@ class window.Game
 
     j = 0
     # counter = 0
-    while (j < rec_height)
+    while (j < @rec_height)
       $("canvas").drawLine
         layer: true
         name: "hline#{j}"
@@ -170,7 +176,7 @@ class window.Game
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
         x1: 0, y1: j,
-        x2: rec_width, y2: j
+        x2: @rec_width, y2: j
       # counter++
       # break if (counter > @cellsX)
       j += @height/vertsteps
