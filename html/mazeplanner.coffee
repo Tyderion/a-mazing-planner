@@ -1,22 +1,61 @@
 class window.Game
-  constructor: (width, height, context) ->
+  constructor: (width, height, context, cellsX, cellsY, string) ->
     @width = width
     @height = height
+    @cellX = cellsX
+    @cellsY = cellsY
     @context = context
     @grid = #[][]
     @test = []
     @timeout = 0
     @counter = 0
-    @grid = for row in [0..height]
-      	for col in [0..width]
+    @string = string
+    @grid = for row in [0..width]
+      	for col in [0..height]
           0#if Math.random() > 0.3 then 0 else 1
     @createhandlers()
+    @load() if @string != ""
     @redrawContext()
 
 
+
+
+
+  save: ->
+    @createString()
+    console.log "Saving string as cookie!"
+    $.cookie('test', "110000011")
+    console.log "Saved"
+
+  load: ->
+    @string = $.cookie('test')
+    console.log "Loading: #{@string}"
+    @readString()
+    @string = ""
+    @debug()
+    console.log @string
+
+
+  readString: ->
+    for i in [0..@width]
+      for j in [0..@height]
+        if i*@width+j > @string.length
+          @grid[i][j] = 0
+        else
+          @grid[i][j] = @string[i*@width+j]
+
+  createString: ->
+    @string = ""
+    for i in [0..@width]
+      for j in [0..@height]
+        @string += @grid[i][j]
+    matches = @string.match(new RegExp('1', "g"))
+    length = matches.length unless matches is null
+    console.log "String representation has #{length} of 1s"
+
   debug: ->
-    for i in [0..8]
-      for j in [0..8]
+    for i in [0..4]
+      for j in [0..4]
         @string = "#{@string} #{@grid[j][i]}"
       @string = "#{@string} \n"
     @string = "#{@string} \n\n"
@@ -73,6 +112,7 @@ class window.Game
           for j in [y..y+1]
             @grid[i][j] = newval
       @redrawContext()
+    @save()
 
   drawGrid: (x, y, steps) ->
     vertsteps = (@height/@width)*steps
@@ -140,12 +180,14 @@ class window.Game
       "resize": (e) =>
         # Use Timeout....
         @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
-
       "mousewheel": (e, delta, deltaX, deltaY) =>
-        # Maybe use timeout too ... or something that just waits until user stops or just updates every second
-        # if deltaY > 0
-        #   window.gridsize += 1 if window.gridsize < 40
-        # else
-        #   window.gridsize -= 1 if window.gridsize > 5
-        # if @timeout <= 0
-        #   @timeout = window.setTimeout(@redrawContext, 20)
+        if deltaY > 0
+          window.gridsize += 1 if window.gridsize < 40
+        else
+          window.gridsize -= 1 if window.gridsize > 5
+        if @timeout <= 0
+          @timeout = window.setTimeout(@redrawContext, 20)
+      "beforeunload": =>
+        @save()
+      "onload": =>
+        @load()

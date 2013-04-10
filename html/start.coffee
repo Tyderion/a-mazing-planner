@@ -16,7 +16,13 @@ $ ->
     window.ok = true
     #Canvas commands go here
     window.gridsize = width/8#20
-    game = new  window.Game(width, height, context)
+
+    if $.cookie('test') != ""
+      str = $.cookie('test')
+      console.log "Loaded cookie: #{str}"
+    else
+      str = ""
+    game = new  window.Game(width, height, context,10,10, str)
 
 
 
