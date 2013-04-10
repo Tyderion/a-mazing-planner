@@ -15,7 +15,7 @@ $ ->
     context.canvas.height = height;
     window.ok = true
     #Canvas commands go here
-    window.gridsize = 20
+    window.gridsize = width/8#20
     game = new  window.Game(width, height, context)
 
 

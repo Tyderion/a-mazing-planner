@@ -4,7 +4,10 @@ class window.Game
     @height = height
     @context = context
     @grid = #[][]
+    @test = []
     @timeout = 0
+    @counter = 0
+    @string = ""
     @grid = for row in [0..height]
       	for col in [0..width]
           0#if Math.random() > 0.3 then 0 else 1
@@ -12,8 +15,15 @@ class window.Game
     @redrawContext()
 
 
+  debug: ->
+    for i in [0..8]
+      for j in [0..8]
+        @string = "#{@string} #{@grid[j][i]}"
+      @string = "#{@string} \n"
+    @string = "#{@string} \n\n"
+
   redrawContext:  =>
-    console.log "Redrawing Context!"
+    # console.log "Redrawing Context!"
     $("canvas").clearCanvas()
     @checkDims()
     steps = @width/window.gridsize
@@ -28,17 +38,71 @@ class window.Game
 
 
 
-  click: (event) ->
-    x = Math.floor event.clientX / window.gridsize
-    y = Math.floor event.clientY / window.gridsize
+  # Return true if the block at x,y is or can be the topleft cell of a tower
+  checkValidity: (x,y) =>
+    return true if (x< 0 or y < 0 or x > @width or y > @height)
+    index = x*@width+y
+    unless @test[index]  is  undefined
+      return @test[index]
+    @counter += 1
+    if @counter > 20
+      console.log "STOPPING TOO MUCH RECURSION!!!!"
+      return false
     current = @grid[x][y]
-    if current == 0 or current == 1
+    # If all 4 are empty, tower can be placed
+    console.log "Validity of #{x}#{y}  depends on ..."
+    if @grid[x+1][y] == @grid[x][y+1] == @grid[x+1][y+1] == current
+      if current == 0
+        @test[index] = true
+      else
+        # Tower can be placed if the rest of the black fields are only towers
+        #TODO: from a vertical 2x4 space can the middle be removed
+        h = -1
+        v = -1
+        while h <= 1
+          while v <= 1
+            unless h == 0 and v == 0
+              if @grid[x+h][y+v] == 0
+                console.log "#{x+h}#{y+v} ok "
+                @test[index] = true
+              else if @grid[x+h][y+v] == 1
+                console.log "#{x+h}#{y+v} which depends on ..."
+                if @checkValidity(x+h, y+v)
+                  @test[index] = false
+                  break
+            # break unless @test[index]
+            v++
+          h++
+        @test[index] = true if @test[index] is undefined
+    else
+     @test[index] = false
+
+    console.log "Testing #{x}#{y} result is: #{@test[index]}"
+    return @test[index]
+
+  click: (event) ->
+    @test = []
+    @counter = 0
+    # @debug()
+    x = Math.floor( event.clientX / window.gridsize)
+    y = Math.floor( event.clientY / window.gridsize)
+    # console.log "Click: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
+
+    current = @grid[x][y]
+    if current <= 2
       newval = @grid[x][y]*-1 +1 #Swap 0 and 1
-      if @grid[x+1][y] == @grid[x][y+1] == @grid[x+1][y+1] == current
+      valid = @checkValidity(x,y)
+      # console.log "This click is valid? #{valid}"
+      if valid
         for i in [x..x+1]
           for j in [y..y+1]
             @grid[i][j] = newval
+
       # @grid[x][y] = newval
+
+      # @debug()
+      # console.log @string
+      @string = ""
       @redrawContext()
 
   drawGrid: (x, y, steps) ->
@@ -110,9 +174,9 @@ class window.Game
 
       "mousewheel": (e, delta, deltaX, deltaY) =>
         # Maybe use timeout too ... or something that just waits until user stops or just updates every second
-        if deltaY > 0
-          window.gridsize += 1 if window.gridsize < 40
-        else
-          window.gridsize -= 1 if window.gridsize > 5
-        if @timeout <= 0
-          @timeout = window.setTimeout(@redrawContext, 20)
+        # if deltaY > 0
+        #   window.gridsize += 1 if window.gridsize < 40
+        # else
+        #   window.gridsize -= 1 if window.gridsize > 5
+        # if @timeout <= 0
+        #   @timeout = window.setTimeout(@redrawContext, 20)
