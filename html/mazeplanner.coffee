@@ -9,20 +9,20 @@ class window.Game
     @width = width
     @height = height
     #TODO: Use cellsX/Y instead of width/height to generate grid (and other stuff) concerning the cells and not the pixels.
-    @cellsX = cellsX
-    @cellsY = cellsY
+    @cellsX = cellsX-1
+    @cellsY = cellsY-1
     @context = context
     @constructor.game = this
     @test = []
     @timeout = 0
     @counter = 0
     @string = string
-    @grid = for row in [0..cellsX]
-      	for col in [0..cellsY]
+    @grid = for row in [0..@cellsX]
+      	for col in [0..@cellsY]
           0#if Math.random() > 0.3 then 0 else 1
-    console.log @grid
+    # console.log @grid
     @createhandlers()
-    #@load() if @string != ""
+    @load() if @string != ""
     @redrawContext()
 
 
@@ -34,40 +34,36 @@ class window.Game
     # console.log "Saving string as cookie!"
     $.cookie "test", @string,
       path: "/"
-    console.log "Saved"
+    # console.log "Saved"
 
   load: ->
     @string = $.cookie('test')
-    console.log "Loading: #{@string}"
+    # console.log "Loading: #{@string}"
     @readString()
     @string = ""
     @debug()
-    console.log @string
+    # console.log @string
 
 
   readString: ->
-    @grid = for row in [0..cellsX]
-        for col in [0..cellsY]
-          0#if Math.random() >
-    # for i in [0..@cellsX]
-    #   for j in [0..@cellsY]
-    #     if i*@cellsX+j >= @string.length
-    #       @grid[i][j] = 0
-    #     else
-    #       @grid[i][j] = @string[i*@cellsX+j]
+    p = 0
+    while (p < @string.length)
+      # console.log "p: #{p} and p/(@cellsX+1): #{Math.floor p/(@cellsX+1)} and p%@cellsY: #{p%(@cellsX+1)}"
+      @grid[Math.floor p/(@cellsX+1)][p%(@cellsX+1)] = parseInt @string[p]
+      p++
 
   createString: ->
     @string = ""
     for i in [0..@cellsX]
       for j in [0..@cellsY]
         @string += @grid[i][j]
-    matches = @string.match(new RegExp('1', "g"))
-    length = matches.length unless matches is null
-    console.log "String representation has #{length} of 1s"
+    # matches = @string.match(new RegExp('1', "g"))
+    # length = matches.length unless matches is null
+    # console.log "String representation has #{length} of 1s"
 
   debug: ->
-    for i in [0..4]
-      for j in [0..4]
+    for i in [0..@cellsX]
+      for j in [0..@cellsY]
         @string = "#{@string} #{@grid[j][i]}"
       @string = "#{@string} \n"
     @string = "#{@string} \n\n"
@@ -96,7 +92,7 @@ class window.Game
     unless @test[index]  is undefined
       return @test[index]
     current = @grid[x][y]
-    console.log "Current: #{current}"
+    # console.log "Current: #{current}"
     # If all 4 are empty, tower can be placed
     if @grid[x+1][y] == @grid[x][y+1] == @grid[x+1][y+1] == current
       if current == 0
@@ -108,7 +104,7 @@ class window.Game
         @test[index] = true if @test[index] is undefined
     else
      @test[index] = false
-    console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
+    # console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
     return @test[index]
 
   click: (event) ->
@@ -132,7 +128,9 @@ class window.Game
     steps = @width/window.gridsize
     vertsteps = (@height/@width)*steps
 
-    console.log "Steps: #{steps}"
+    # console.log "Steps: #{steps}"
+    rec_width = Math.min (@width/steps)*(@cellsX+1), @width
+    rec_height = Math.min (@height/vertsteps)*(@cellsY+1), @height
     $('canvas').drawRect
       layer: true
       name: "border"
@@ -140,13 +138,15 @@ class window.Game
       strokeStyle: "#000",
       strokeWidth: 2
       x: x, y: y,
-      width: @width,
-      height: @height,
+      width: rec_width
+      height: rec_height
       fromCenter: false
 
+
+
     i = 0
-    counter = 0
-    while (i < @width)
+    # counter = 0
+    while (i < rec_width)
       $("canvas").drawLine
         layer: true
         name: "vline#{i}"
@@ -154,15 +154,15 @@ class window.Game
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
         x1: i, y1: 0,
-        x2: i, y2: @height
-      counter++
-      break if (counter > @cellsX)
+        x2: i, y2: rec_height
+      # counter++
+      # break if (counter > @cellsX)
       i += (@width/steps)
 
 
     j = 0
-    counter = 0
-    while (j < @height)
+    # counter = 0
+    while (j < rec_height)
       $("canvas").drawLine
         layer: true
         name: "hline#{j}"
@@ -170,17 +170,17 @@ class window.Game
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
         x1: 0, y1: j,
-        x2: @width, y2: j
-      counter++
-      break if (counter > @cellsX)
+        x2: rec_width, y2: j
+      # counter++
+      # break if (counter > @cellsX)
       j += @height/vertsteps
 
 
     start = 0#window.gridsize/2
 
-    console.log "cellsX: #{@cellsX} and cellsy: #{@cellsY}"
+    # console.log "cellsX: #{@cellsX} and cellsy: #{@cellsY}"
     @createString()
-    console.log @string
+    # console.log @string
     gridsize = window.gridsize
     for x in [0..@cellsX]
       for y in [0..@cellsY]
@@ -204,6 +204,7 @@ class window.Game
             fromCenter: false
 
   createhandlers: ->
+    # TODO: move the board around! :)
     $(window).on
       'click': (e) =>
         @click(e)
@@ -212,7 +213,7 @@ class window.Game
         @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
       "mousewheel": (e, delta, deltaX, deltaY) =>
         if deltaY > 0
-          window.gridsize += 1 if window.gridsize < 40
+          window.gridsize += 1 if window.gridsize < 300
         else
           window.gridsize -= 1 if window.gridsize > 5
         if @timeout <= 0

@@ -23,7 +23,7 @@ $ ->
     else
       str = ""
     console.log "Gridsize: #{window.gridsize}"
-    game = new  window.Game(width, height, context,20,20, str)
+    game = new  window.Game(width, height, context,4,4, str)
 
 
 
