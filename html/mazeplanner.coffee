@@ -40,12 +40,12 @@ class window.Game
 
   # Return true if the block at x,y is or can be the topleft cell of a tower
   checkValidity: (x,y) =>
-    return true if (x< 0 or y < 0 or x > @width or y > @height)
+    return false if (x< 0 or y < 0 or x > @width or y > @height)
     index = x*@width+y
     unless @test[index]  is  undefined
       return @test[index]
     @counter += 1
-    if @counter > 20
+    if @counter > 50
       console.log "STOPPING TOO MUCH RECURSION!!!!"
       return false
     current = @grid[x][y]
@@ -62,14 +62,14 @@ class window.Game
         while h <= 1
           while v <= 1
             unless h == 0 and v == 0
-              if @grid[x+h][y+v] == 0
-                console.log "#{x+h}#{y+v} ok "
-                @test[index] = true
-              else if @grid[x+h][y+v] == 1
-                console.log "#{x+h}#{y+v} which depends on ..."
-                if @checkValidity(x+h, y+v)
-                  @test[index] = false
-                  break
+              # if @grid[x+h][y+v] == 0
+              #   console.log "#{x+h}#{y+v} ok "
+              #   @test[index] = true
+              # else if @grid[x+h][y+v] == 1
+              #   console.log "#{x+h}#{y+v} which depends on ..."
+              if @checkValidity(x+h, y+v)
+                @test[index] = false
+                break
             # break unless @test[index]
             v++
           h++
