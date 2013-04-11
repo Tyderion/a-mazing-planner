@@ -156,7 +156,7 @@ class window.Game
   click: (event) ->
     @test = []
     # console.log "@rec_width >= event.clientX: #{@rec_width} >= #{event.clientY}"
-    if @rec_width >= event.clientX and @rec_height >= event.clientY
+    if event.clientX in [@xoffset..@rec_width+@xoffset] and event.clientY in [@yoffset..@rec_height+@yoffsetgit ]
       x = Math.floor( Math.max(event.clientX-10-@xoffset,0) / window.gridsize)
       y = Math.floor( Math.max(event.clientY-10-@yoffset,0) / window.gridsize)
       console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
