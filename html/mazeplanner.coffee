@@ -46,6 +46,8 @@ class window.Game
     @xoffset = 100
     @yoffset = 100
 
+    @movestart
+
 
     @checkDims()
     @string = string
@@ -243,6 +245,22 @@ class window.Game
     $(window).on
       click: (e) =>
         @click(e)
+
+      mousemove: (e) =>
+        if @mousedown
+          # Calculate the x/y difference
+          xdiff = @mousedown.clientX - e.clientX
+          ydiff = @mousedown.clientY - e.clientY
+          # Adjust by that difference
+          @xoffset -= xdiff
+          @yoffset -= ydiff
+          @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
+          # Save new position
+          @mousedown = e
+      mousedown: (e) =>
+        @mousedown = e
+      mouseup: (e) =>
+        @mousedown = null
       resize: (e) =>
         # Use Timeout....
         @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
