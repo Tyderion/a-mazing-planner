@@ -29,6 +29,17 @@ class window.Game
     @redrawContext()
 
 
+  reset: ->
+    $.removeCookie 'test',
+      path: '/'
+    # console.log "Removed cookie"
+    # console.log $.cookie()
+    @grid = for row in [0..@cellsX]
+      for col in [0..@cellsY]
+        0
+    console.log @grid
+    @redrawContext()
+
 
   save: ->
     #TODO: Save cellsX/Y in the cookie too, maybe use cookie menu
@@ -48,11 +59,12 @@ class window.Game
 
 
   readString: ->
-    p = 0
-    while (p < @string.length)
-      # console.log "p: #{p} and p/(@cellsX+1): #{Math.floor p/(@cellsX+1)} and p%@cellsY: #{p%(@cellsX+1)}"
-      @grid[Math.floor p/(@cellsX+1)][p%(@cellsX+1)] = parseInt @string[p]
-      p++
+    if @string
+      p = 0
+      while (p < @string.length)
+        # console.log "p: #{p} and p/(@cellsX+1): #{Math.floor p/(@cellsX+1)} and p%@cellsY: #{p%(@cellsX+1)}"
+        @grid[Math.floor p/(@cellsX+1)][p%(@cellsX+1)] = parseInt @string[p]
+        p++
 
   createString: ->
     @string = ""
@@ -206,23 +218,40 @@ class window.Game
             height: gridsize
             fromCenter: false
 
+  toggleMenu: ->
+    $('#settings').toggle()
+
   createhandlers: ->
     # TODO: move the board around! :)
     $(window).on
-      'click': (e) =>
+      click: (e) =>
         @click(e)
-      "resize": (e) =>
+      resize: (e) =>
         # Use Timeout....
         @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
-      "mousewheel": (e, delta, deltaX, deltaY) =>
+      mousewheel: (e, delta, deltaX, deltaY) =>
         if deltaY > 0
           window.gridsize += 1 if window.gridsize < 300
         else
           window.gridsize -= 1 if window.gridsize > 5
         if @timeout <= 0
           @timeout = window.setTimeout(@redrawContext, 20)
-      "beforeunload": =>
+      beforeunload: =>
         @save()
         return null
-      "onload": =>
+      keypress: (e) =>
+        if String.fromCharCode(e.charCode) == "o"
+          @toggleMenu()
+      # keyup: (e) =>
+      #   console.log e.keyCode
+      load: =>
         @load()
+    $('#reset').on
+      click: (e) =>
+        e.stopPropagation()
+        console.log "Click"
+        @reset()
+        return false
+    $('#settings').on
+      click: (e) =>
+        e.stopPropagation()
