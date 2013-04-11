@@ -31,7 +31,7 @@ class Obstacle
         width: (@width)*window.gridsize
         height: (@height)*window.gridsize
         fromCenter: false
-        cornerRadius: 15,
+        cornerRadius: window.gridsize/3,
 
 class window.Game
   @game
