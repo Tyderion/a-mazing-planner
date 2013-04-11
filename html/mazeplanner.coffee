@@ -12,11 +12,11 @@ class Obstacle
     @type = 0 unless @type
 
 
-  draw: ->
+  draw: (xoff, yoff)->
     if @type is 1
       $('canvas').drawRect
         fillStyle: "#000",
-        x: Math.floor(@posx*window.gridsize)+1, y: Math.floor(@posy*window.gridsize)
+        x: Math.floor(@posx*window.gridsize)+xoff, y: Math.floor(@posy*window.gridsize)+yoff
         width: (@width)*window.gridsize
         height: (@height)*window.gridsize
         fromCenter: false
@@ -43,6 +43,8 @@ class window.Game
     @rec_height = 0
     @obstacle_height = 2
     @obstacle_width = 2
+    @xoffset = 100
+    @yoffset = 100
 
 
     @checkDims()
@@ -153,11 +155,10 @@ class window.Game
     @test = []
     # console.log "@rec_width >= event.clientX: #{@rec_width} >= #{event.clientY}"
     if @rec_width >= event.clientX and @rec_height >= event.clientY
-      x = Math.floor( Math.max(event.clientX-10,0) / window.gridsize)
-      y = Math.floor( Math.max(event.clientY-10,0) / window.gridsize)
+      x = Math.floor( Math.max(event.clientX-10-@xoffset,0) / window.gridsize)
+      y = Math.floor( Math.max(event.clientY-10-@yoffset,0) / window.gridsize)
       console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
       current = @grid[x][y].type
-      # console.log  "Current: #{current}"
       if current <= 2
         newval = current*-1 +1 #Swap 0 and 1
         if @checkValidity(x,y)
@@ -165,9 +166,6 @@ class window.Game
           for i in [0..@obstacle_height-1]
             for j in [0..@obstacle_width-1]
               unless i is 0 and j is 0
-                # console.log "Testing (#{x+j},#{y+i})"
-                # break unless val
-                # val = false unless @grid[x+j][y+i].type is 0
                 @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + 5
           console.log @grid[x][y]
         @redrawContext()
@@ -179,15 +177,15 @@ class window.Game
     vertsteps = (@height/@width)*steps
 
     # console.log "Steps: #{steps}"
-    @rec_width = Math.min (@width/steps)*(@cellsX+1), @width
-    @rec_height = Math.min (@height/vertsteps)*(@cellsY+1), @height
+    @rec_width = Math.min (@width/steps)*(@cellsX+1), @width-@xoffset
+    @rec_height = Math.min (@height/vertsteps)*(@cellsY+1), @height-@yoffset
     $('canvas').drawRect
       layer: true
       name: "border"
       group: "grid"
       strokeStyle: "#000",
       strokeWidth: 2
-      x: x, y: y,
+      x: x+@xoffset, y: y+@yoffset,
       width: @rec_width
       height: @rec_height
       fromCenter: false
@@ -203,8 +201,8 @@ class window.Game
         group: "grid"
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
-        x1: i, y1: 0,
-        x2: i, y2: @rec_height
+        x1: i+@xoffset, y1: @yoffset,
+        x2: i+@xoffset, y2: @rec_height+@yoffset
       # counter++
       # break if (counter > @cellsX)
       i += (@width/steps)
@@ -219,8 +217,8 @@ class window.Game
         group: "grid"
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
-        x1: 0, y1: j,
-        x2: @rec_width, y2: j
+        x1: @xoffset, y1: j+@yoffset,
+        x2: @rec_width+@xoffset, y2: j+@yoffset
       # counter++
       # break if (counter > @cellsX)
       j += @height/vertsteps
@@ -234,7 +232,8 @@ class window.Game
     gridsize = window.gridsize
     for x in [0..@cellsX]
       for y in [0..@cellsY]
-        @grid[x][y].draw()
+        @grid[x][y].draw(@xoffset, @yoffset)
+        # @grid[x][y].draw(0, 0)
 
   toggleMenu: ->
     $('#settings').toggle()
