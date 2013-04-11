@@ -19,7 +19,7 @@ class Obstacle
 
 
     @type = 0 unless @type
-    console.log "type: #{@type}"
+    # console.log "type: #{@type}"
 
 
   draw: (xoff, yoff)->
@@ -140,8 +140,9 @@ class window.Game
   # Return true if the block at x,y is or can be the topleft cell of a tower
   checkValidity: (x,y) =>
     # If its outside, it is not valid xD
-    return false if (x< 0 or y < 0 or x >= @cellsX or y >= @cellsY)
+    return false if (x< 0 or y < 0 or x > @cellsX or y > @cellsY)
     current = @grid[x][y].type
+    # console.log "Current: #{current}"
     # If the current is a tower, we can remove it
     if current is 1
       return true
@@ -151,9 +152,10 @@ class window.Game
       for i in [0..@obstacle_height-1]
         for j in [0..@obstacle_width-1]
           unless i is 0 and j is 0
-            # console.log "Testing (#{x+j},#{y+i})"
+            # console.log "Testing (#{x}+#{j},#{y}+#{i})"
             break unless val
             val = false unless @grid[x+j][y+i].type is 0
+      # console.log "Testing (#{x},#{y}) and it is #{val}"
       return val
     else
       return false
@@ -175,15 +177,16 @@ class window.Game
 
       if current < 2
         newval = current*-1 +1 #Swap 0 and 1
-        owidth = @obstacle_width
-        oheight = @obstacle_height
         if event.shiftKey
           newval = 3
-          owidth = oheight = 1
+          @obstacle_height = @obstacle_width = 1
+        else
+          @obstacle_height = @obstacle_width = 2
+
         if @checkValidity(x,y)
-          @grid[x][y] = new Obstacle(x,y,owidth, oheight, newval)
-          for i in [0..oheight-1]
-            for j in [0..owidth-1]
+          @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval)
+          for i in [0..@obstacle_height-1]
+            for j in [0..@obstacle_width-1]
               unless i is 0 and j is 0
                 # Swap 5 and 0
                 @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
