@@ -1,3 +1,25 @@
+class Obstacle
+
+  constructor: (posx, posy, width, height) ->
+    # Default
+    # Width, height = 2,2 (2 cells high, 2 cells wide)
+    @posx = posx
+    @posy = posy
+    @width = width
+    @width = width
+    @height = height
+    @type = 0
+
+
+  draw: ->
+    if @type is 1
+      $('canvas').drawRect
+        fillStyle: "#000",
+        x: Math.floor(@posx*window.gridsize)+1, y: Math.floor(@posy*window.gridsize)
+        width: (@width-1)*window.gridsize
+        height: (@height-1)*window.gridsize
+        fromCenter: false
+
 class window.Game
   @game
   @it: ->
@@ -8,8 +30,8 @@ class window.Game
 
 
   constructor: (context, cellsX, cellsY, string) ->
-    @width = window.innerWidth
-    @height = window.innerHeight
+    @width = 0
+    @height = 0
     @cellsX = cellsX-1
     @cellsY = cellsY-1
     @context = context
@@ -20,10 +42,12 @@ class window.Game
     @rec_width = 0
     @rec_height = 0
 
+
+    @checkDims()
     @string = string
     @grid = for row in [0..@cellsX]
       	for col in [0..@cellsY]
-            0
+            new Obstacle(row, col, 2,2)
     @createhandlers()
     @load() if @string is ""
     @redrawContext()
@@ -36,15 +60,14 @@ class window.Game
     # console.log $.cookie()
     @grid = for row in [0..@cellsX]
       for col in [0..@cellsY]
-        0
-    console.log @grid
+        new Obstacle(row, col, 2,2)
     @redrawContext()
 
 
   save: ->
     #TODO: Save cellsX/Y in the cookie too, maybe use cookie menu
     @createString()
-    # console.log "Saving string as cookie!"
+    console.log "Saving string as cookie: #{@string}"
     $.cookie "test", @string,
       path: "/"
     # console.log "Saved #{@string} \n cookie: #{$.cookie('test')}"
@@ -63,14 +86,14 @@ class window.Game
       p = 0
       while (p < @string.length)
         # console.log "p: #{p} and p/(@cellsX+1): #{Math.floor p/(@cellsX+1)} and p%@cellsY: #{p%(@cellsX+1)}"
-        @grid[Math.floor p/(@cellsX+1)][p%(@cellsX+1)] = parseInt @string[p]
+        @grid[Math.floor p/(@cellsX+1)][p%(@cellsX+1)].type = parseInt @string[p]
         p++
 
   createString: ->
     @string = ""
     for i in [0..@cellsX]
       for j in [0..@cellsY]
-        @string += @grid[i][j]
+        @string += @grid[i][j].type
     # matches = @string.match(new RegExp('1', "g"))
     # length = matches.length unless matches is null
     # console.log "String representation has #{length} of 1s"
@@ -78,7 +101,7 @@ class window.Game
   debug: ->
     for i in [0..@cellsX]
       for j in [0..@cellsY]
-        @string = "#{@string} #{@grid[j][i]}"
+        @string = "#{@string} #{@grid[j][i].type}"
       @string = "#{@string} \n"
     @string = "#{@string} \n\n"
 
@@ -92,8 +115,8 @@ class window.Game
     @timeout = 0
 
   checkDims: ->
-    @width = window.innerWidth if @width != window.innerWidth
-    @height = window.innerHeight if @height != window.innerheight
+    @width = window.innerWidth-20 if @width != window.innerWidth-20
+    @height = window.innerHeight-20 if @height != window.innerheight-20
 
 
 
@@ -105,10 +128,10 @@ class window.Game
     # If we already calculated the value, just return this one
     unless @test[index]  is undefined
       return @test[index]
-    current = @grid[x][y]
+    current = @grid[x][y].type
     # console.log "Current: #{current}"
     # If all 4 are empty, tower can be placed
-    if @grid[x+1][y] == @grid[x][y+1] == @grid[x+1][y+1] == current
+    if @grid[x+1][y].type == @grid[x][y+1].type == @grid[x+1][y+1].type== current
       if current == 0
         @test[index] = true
       else
@@ -118,7 +141,7 @@ class window.Game
         @test[index] = true if @test[index] is undefined
     else
      @test[index] = false
-    # console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
+    console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
     return @test[index]
 
   click: (event) ->
@@ -128,13 +151,14 @@ class window.Game
       x = Math.floor( event.clientX / window.gridsize)
       y = Math.floor( event.clientY / window.gridsize)
       # console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
-      current = @grid[x][y]
+      current = @grid[x][y].type
+      console.log  "Current: #{current}"
       if current <= 2
-        newval = @grid[x][y]*-1 +1 #Swap 0 and 1
+        newval = current*-1 +1 #Swap 0 and 1
         if @checkValidity(x,y)
           for i in [x..x+1]
             for j in [y..y+1]
-              @grid[i][j] = newval
+              @grid[i][j].type = newval
         @redrawContext()
       @save()
 
@@ -199,24 +223,25 @@ class window.Game
     gridsize = window.gridsize
     for x in [0..@cellsX]
       for y in [0..@cellsY]
-        xcoord= x*gridsize
-        ycoord = y*gridsize
-        if @grid[x][y] == 1
-          $("canvas").drawRect
-            fillStyle: "#000"
-            x: xcoord
-            y: ycoord
-            width: gridsize
-            height: gridsize
-            fromCenter: false
-        else if @grid[x][y] == 2
-          $("canvas").drawRect
-            fillStyle: "#686868"
-            x: xcoord
-            y: ycoord
-            width: gridsize
-            height: gridsize
-            fromCenter: false
+        @grid[x][y].draw()
+        # xcoord= x*gridsize
+        # ycoord = y*gridsize
+        # if @grid[x][y] == 1
+        #   $("canvas").drawRect
+        #     fillStyle: "#000"
+        #     x: xcoord
+        #     y: ycoord
+        #     width: gridsize
+        #     height: gridsize
+        #     fromCenter: false
+        # else if @grid[x][y] == 2
+        #   $("canvas").drawRect
+        #     fillStyle: "#686868"
+        #     x: xcoord
+        #     y: ycoord
+        #     width: gridsize
+        #     height: gridsize
+        #     fromCenter: false
 
   toggleMenu: ->
     $('#settings').toggle()
