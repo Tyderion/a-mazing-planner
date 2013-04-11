@@ -1,6 +1,6 @@
 class Obstacle
 
-  constructor: (posx, posy, width, height) ->
+  constructor: (posx, posy, width, height, type) ->
     # Default
     # Width, height = 2,2 (2 cells high, 2 cells wide)
     @posx = posx
@@ -8,7 +8,8 @@ class Obstacle
     @width = width
     @width = width
     @height = height
-    @type = 0
+    @type = type
+    @type = 0 unless @type
 
 
   draw: ->
@@ -16,8 +17,8 @@ class Obstacle
       $('canvas').drawRect
         fillStyle: "#000",
         x: Math.floor(@posx*window.gridsize)+1, y: Math.floor(@posy*window.gridsize)
-        width: (@width-1)*window.gridsize
-        height: (@height-1)*window.gridsize
+        width: (@width)*window.gridsize
+        height: (@height)*window.gridsize
         fromCenter: false
 
 class window.Game
@@ -36,18 +37,19 @@ class window.Game
     @cellsY = cellsY-1
     @context = context
     @constructor.game = this
-    @test = []
     @timeout = 0
     @counter = 0
     @rec_width = 0
     @rec_height = 0
+    @obstacle_height = 2
+    @obstacle_width = 2
 
 
     @checkDims()
     @string = string
     @grid = for row in [0..@cellsX]
       	for col in [0..@cellsY]
-            new Obstacle(row, col, 2,2)
+             new Obstacle(row, col, 1,1)
     @createhandlers()
     @load() if @string is ""
     @redrawContext()
@@ -60,17 +62,17 @@ class window.Game
     # console.log $.cookie()
     @grid = for row in [0..@cellsX]
       for col in [0..@cellsY]
-        new Obstacle(row, col, 2,2)
+        new Obstacle(row, col, 1,1,0)
     @redrawContext()
 
 
   save: ->
-    #TODO: Save cellsX/Y in the cookie too, maybe use cookie menu
+    #TODO: Save cellsX/Y in the cookie too, maybe use cookie title or cvs or some cookie manager (jquery-plugin or similar)
     @createString()
-    console.log "Saving string as cookie: #{@string}"
+    # console.log "Saving string as cookie: #{@string}"
     $.cookie "test", @string,
       path: "/"
-    # console.log "Saved #{@string} \n cookie: #{$.cookie('test')}"
+    # console.log "Saved #{@string} "#\n cookie: #{$.cookie('test')}"
 
   load: ->
     @string = $.cookie('test')
@@ -86,10 +88,15 @@ class window.Game
       p = 0
       while (p < @string.length)
         # console.log "p: #{p} and p/(@cellsX+1): #{Math.floor p/(@cellsX+1)} and p%@cellsY: #{p%(@cellsX+1)}"
-        @grid[Math.floor p/(@cellsX+1)][p%(@cellsX+1)].type = parseInt @string[p]
+        # x = Math.floor p/(@cellsX+1)
+        # y = p%(@cellsX+1)
+        # console.log "grid[x][y] = grid#{[x]},#{[y]}"
+        # @grid[x][y] = new Obstacle(x,y, 2,2, parseInt @string[p])
+
         p++
 
   createString: ->
+    #TODO: Think of a better way to save the obstacles
     @string = ""
     for i in [0..@cellsX]
       for j in [0..@cellsY]
@@ -124,41 +131,45 @@ class window.Game
   checkValidity: (x,y) =>
     # If its outside, it is not valid xD
     return false if (x< 0 or y < 0 or x >= @cellsX or y >= @cellsY)
-    index = x*@cellsX+y
-    # If we already calculated the value, just return this one
-    unless @test[index]  is undefined
-      return @test[index]
     current = @grid[x][y].type
-    # console.log "Current: #{current}"
-    # If all 4 are empty, tower can be placed
-    if @grid[x+1][y].type == @grid[x][y+1].type == @grid[x+1][y+1].type== current
-      if current == 0
-        @test[index] = true
-      else
-        # Testing left, top and 1 diagonal seems to suffice, if I test both horizontals, it does not work xD
-        if @checkValidity(x-1, y) or @checkValidity(x, y-1) or @checkValidity(x-1, y-1)
-          @test[index] = false
-        @test[index] = true if @test[index] is undefined
+    # If the current is a tower, we can remove it
+    if current is 1
+      return true
+    # If the current is empty, test if there is space for a tower
+    else if current is 0
+      val = true
+      for i in [0..@obstacle_height-1]
+        for j in [0..@obstacle_width-1]
+          unless i is 0 and j is 0
+            # console.log "Testing (#{x+j},#{y+i})"
+            break unless val
+            val = false unless @grid[x+j][y+i].type is 0
+      return val
     else
-     @test[index] = false
-    console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
-    return @test[index]
+      return false
+    # console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
 
   click: (event) ->
     @test = []
     # console.log "@rec_width >= event.clientX: #{@rec_width} >= #{event.clientY}"
     if @rec_width >= event.clientX and @rec_height >= event.clientY
-      x = Math.floor( event.clientX / window.gridsize)
-      y = Math.floor( event.clientY / window.gridsize)
-      # console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
+      x = Math.floor( Math.max(event.clientX-10,0) / window.gridsize)
+      y = Math.floor( Math.max(event.clientY-10,0) / window.gridsize)
+      console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
       current = @grid[x][y].type
-      console.log  "Current: #{current}"
+      # console.log  "Current: #{current}"
       if current <= 2
         newval = current*-1 +1 #Swap 0 and 1
         if @checkValidity(x,y)
-          for i in [x..x+1]
-            for j in [y..y+1]
-              @grid[i][j].type = newval
+          @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval)
+          for i in [0..@obstacle_height-1]
+            for j in [0..@obstacle_width-1]
+              unless i is 0 and j is 0
+                # console.log "Testing (#{x+j},#{y+i})"
+                # break unless val
+                # val = false unless @grid[x+j][y+i].type is 0
+                @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + 5
+          console.log @grid[x][y]
         @redrawContext()
       @save()
 
@@ -224,24 +235,6 @@ class window.Game
     for x in [0..@cellsX]
       for y in [0..@cellsY]
         @grid[x][y].draw()
-        # xcoord= x*gridsize
-        # ycoord = y*gridsize
-        # if @grid[x][y] == 1
-        #   $("canvas").drawRect
-        #     fillStyle: "#000"
-        #     x: xcoord
-        #     y: ycoord
-        #     width: gridsize
-        #     height: gridsize
-        #     fromCenter: false
-        # else if @grid[x][y] == 2
-        #   $("canvas").drawRect
-        #     fillStyle: "#686868"
-        #     x: xcoord
-        #     y: ycoord
-        #     width: gridsize
-        #     height: gridsize
-        #     fromCenter: false
 
   toggleMenu: ->
     $('#settings').toggle()
