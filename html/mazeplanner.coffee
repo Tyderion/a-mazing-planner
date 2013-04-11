@@ -112,7 +112,7 @@ class window.Game
       for j in [0..@cellsY]
         ele = @grid[i][j]
         # If it is a tower, save it
-        if (ele.type == 1)
+        if (ele.type >= 1)
           # cellx, celly, width, height, type (just here to be future proof)
           @string += "#{i},#{j},#{ele.width},#{ele.height},#{ele.type};"
 
@@ -167,9 +167,13 @@ class window.Game
     if inx and iny
       x = Math.floor( Math.max(event.clientX-10-@xoffset,0) / window.gridsize)
       y = Math.floor( Math.max(event.clientY-10-@yoffset,0) / window.gridsize)
-      console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
+      console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
       current = @grid[x][y].type
-      if current <= 2
+      if current == 3
+        newval = current*-1 +3 #Swap 0 and 2
+        @grid[x][y].type= newval#new Obstacle(x,y,owidth, oheight, newval)
+
+      if current < 2
         newval = current*-1 +1 #Swap 0 and 1
         owidth = @obstacle_width
         oheight = @obstacle_height
@@ -184,7 +188,7 @@ class window.Game
                 # Swap 5 and 0
                 @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
           # console.log @grid[x][y]
-        @redrawContext()
+      @redrawContext()
       @save()
 
 
