@@ -6,7 +6,6 @@ class Obstacle
     @posx = posx
     @posy = posy
     @width = width
-    @width = width
     @height = height
     @type = type
     @type = 0 unless @type
@@ -89,25 +88,25 @@ class window.Game
 
   readString: ->
     if @string
-      p = 0
-      while (p < @string.length)
-        # console.log "p: #{p} and p/(@cellsX+1): #{Math.floor p/(@cellsX+1)} and p%@cellsY: #{p%(@cellsX+1)}"
-        # x = Math.floor p/(@cellsX+1)
-        # y = p%(@cellsX+1)
-        # console.log "grid[x][y] = grid#{[x]},#{[y]}"
-        # @grid[x][y] = new Obstacle(x,y, 2,2, parseInt @string[p])
-
-        p++
+      strings = @string.split(/;/)
+      console.log strings
+      for obstacle in strings
+        unless obstacle is ""
+          attrs = obstacle.split(/,/)
+          attrs = (parseInt(ele) for ele in attrs)
+          [x, y, width, height, type] = attrs
+          @grid[x][y] = new Obstacle(x,y, width, height, type)
 
   createString: ->
     #TODO: Think of a better way to save the obstacles
     @string = ""
     for i in [0..@cellsX]
       for j in [0..@cellsY]
-        @string += @grid[i][j].type
-    # matches = @string.match(new RegExp('1', "g"))
-    # length = matches.length unless matches is null
-    # console.log "String representation has #{length} of 1s"
+        ele = @grid[i][j]
+        # If it is a tower, save it
+        if (ele.type == 1)
+          # cellx, celly, width, height, type (just here to be future proof)
+          @string += "#{i},#{j},#{ele.width},#{ele.height},#{ele.type};"
 
   debug: ->
     for i in [0..@cellsX]
@@ -154,9 +153,10 @@ class window.Game
     # console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
 
   click: (event) ->
-    @test = []
     # console.log "@rec_width >= event.clientX: #{@rec_width} >= #{event.clientY}"
-    if event.clientX in [@xoffset..@rec_width+@xoffset] and event.clientY in [@yoffset..@rec_height+@yoffsetgit ]
+    inx = event.clientX in [@xoffset..@rec_width+@xoffset]
+    iny = event.clientY in [@yoffset..@rec_height+@yoffset]
+    if inx and iny
       x = Math.floor( Math.max(event.clientX-10-@xoffset,0) / window.gridsize)
       y = Math.floor( Math.max(event.clientY-10-@yoffset,0) / window.gridsize)
       console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y})"
@@ -244,7 +244,8 @@ class window.Game
     # TODO: move the board around! :)
     $(window).on
       click: (e) =>
-        @click(e)
+        if e.button == 0
+          @click(e)
 
       mousemove: (e) =>
         if @mousedown
