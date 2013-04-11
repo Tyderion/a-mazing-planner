@@ -7,10 +7,9 @@ class window.Game
 
 
 
-  constructor: (width, height, context, cellsX, cellsY, string) ->
-    @width = width
-    @height = height
-    #TODO: Use cellsX/Y instead of width/height to generate grid (and other stuff) concerning the cells and not the pixels.
+  constructor: (context, cellsX, cellsY, string) ->
+    @width = window.innerWidth
+    @height = window.innerHeight
     @cellsX = cellsX-1
     @cellsY = cellsY-1
     @context = context
@@ -24,22 +23,20 @@ class window.Game
     @string = string
     @grid = for row in [0..@cellsX]
       	for col in [0..@cellsY]
-          0#if Math.random() > 0.3 then 0 else 1
-    # console.log @grid
+            0
     @createhandlers()
-    @load() if @string != ""
+    @load() if @string is ""
     @redrawContext()
 
 
 
-
-
   save: ->
+    #TODO: Save cellsX/Y in the cookie too, maybe use cookie menu
     @createString()
     # console.log "Saving string as cookie!"
     $.cookie "test", @string,
       path: "/"
-    # console.log "Saved"
+    # console.log "Saved #{@string} \n cookie: #{$.cookie('test')}"
 
   load: ->
     @string = $.cookie('test')
@@ -226,5 +223,6 @@ class window.Game
           @timeout = window.setTimeout(@redrawContext, 20)
       "beforeunload": =>
         @save()
+        return null
       "onload": =>
         @load()
