@@ -8,20 +8,34 @@ class Obstacle
     @width = width
     @height = height
     @type = type
+    @color = "#FFF"
+    switch type
+      when 1
+        @color = "#000"
+      when 2
+        @color = "#B0B0B0"
+      when 3
+        @color = "#B00000"
+
+
     @type = 0 unless @type
+    console.log "type: #{@type}"
 
 
   draw: (xoff, yoff)->
-    if @type is 1
+    # Only draw if type is 1,2,3 or 4
+    if 0 < @type < window.Game.BLOCKED
       $('canvas').drawRect
-        fillStyle: "#000",
+        fillStyle: @color,
         x: Math.floor(@posx*window.gridsize)+xoff, y: Math.floor(@posy*window.gridsize)+yoff
         width: (@width)*window.gridsize
         height: (@height)*window.gridsize
         fromCenter: false
+        cornerRadius: 15,
 
 class window.Game
   @game
+  @BLOCKED = 5
   @it: ->
     return @game
 
@@ -46,6 +60,7 @@ class window.Game
     @yoffset = 100
 
     @movestart
+    @cookiename = "maze"
 
 
     @checkDims()
@@ -59,10 +74,7 @@ class window.Game
 
 
   reset: ->
-    $.removeCookie 'test',
-      path: '/'
-    # console.log "Removed cookie"
-    # console.log $.cookie()
+    $.removeCookie @cookiename
     @grid = for row in [0..@cellsX]
       for col in [0..@cellsY]
         new Obstacle(row, col, 1,1,0)
@@ -70,35 +82,31 @@ class window.Game
 
 
   save: ->
-    #TODO: Save cellsX/Y in the cookie too, maybe use cookie title or cvs or some cookie manager (jquery-plugin or similar)
     @createString()
-    # console.log "Saving string as cookie: #{@string}"
-    $.cookie "test", @string,
-      path: "/"
-    # console.log "Saved #{@string} "#\n cookie: #{$.cookie('test')}"
+    $.cookie @cookiename, @string
 
   load: ->
-    @string = $.cookie('test')
-    # console.log "Loading: #{@string}"
+    @string = $.cookie(@cookiename)
     @readString()
-    @string = ""
+    @createString()
     @debug()
-    # console.log @string
 
 
   readString: ->
     if @string
       strings = @string.split(/;/)
-      console.log strings
       for obstacle in strings
         unless obstacle is ""
           attrs = obstacle.split(/,/)
           attrs = (parseInt(ele) for ele in attrs)
           [x, y, width, height, type] = attrs
           @grid[x][y] = new Obstacle(x,y, width, height, type)
+          for i in [x..x+width-1]
+            for j in [y..y+height-1]
+              unless i is x and j is y
+                @grid[i][j].type = @constructor.NONE
 
   createString: ->
-    #TODO: Think of a better way to save the obstacles
     @string = ""
     for i in [0..@cellsX]
       for j in [0..@cellsY]
@@ -116,7 +124,6 @@ class window.Game
     @string = "#{@string} \n\n"
 
   redrawContext:  =>
-    # console.log "Redrawing Context!"
     $("canvas").clearCanvas()
     @checkDims()
     @context.canvas.width  = @width;
@@ -153,6 +160,7 @@ class window.Game
     # console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
 
   click: (event) ->
+    console.log event
     # console.log "@rec_width >= event.clientX: #{@rec_width} >= #{event.clientY}"
     inx = event.clientX in [@xoffset..@rec_width+@xoffset]
     iny = event.clientY in [@yoffset..@rec_height+@yoffset]
@@ -163,13 +171,19 @@ class window.Game
       current = @grid[x][y].type
       if current <= 2
         newval = current*-1 +1 #Swap 0 and 1
+        owidth = @obstacle_width
+        oheight = @obstacle_height
+        if event.shiftKey
+          newval = 3
+          owidth = oheight = 1
         if @checkValidity(x,y)
-          @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval)
-          for i in [0..@obstacle_height-1]
-            for j in [0..@obstacle_width-1]
+          @grid[x][y] = new Obstacle(x,y,owidth, oheight, newval)
+          for i in [0..oheight-1]
+            for j in [0..owidth-1]
               unless i is 0 and j is 0
-                @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + 5
-          console.log @grid[x][y]
+                # Swap 5 and 0
+                @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
+          # console.log @grid[x][y]
         @redrawContext()
       @save()
 
@@ -177,8 +191,6 @@ class window.Game
   drawGrid: (x,y) ->
     steps = @width/window.gridsize
     vertsteps = (@height/@width)*steps
-
-    # console.log "Steps: #{steps}"
     @rec_width = Math.min (@width/steps)*(@cellsX+1), @width-@xoffset
     @rec_height = Math.min (@height/vertsteps)*(@cellsY+1), @height-@yoffset
     $('canvas').drawRect
@@ -195,7 +207,6 @@ class window.Game
 
 
     i = 0
-    # counter = 0
     while (i < @rec_width)
       $("canvas").drawLine
         layer: true
@@ -205,13 +216,10 @@ class window.Game
         strokeWidth: 1,
         x1: i+@xoffset, y1: @yoffset,
         x2: i+@xoffset, y2: @rec_height+@yoffset
-      # counter++
-      # break if (counter > @cellsX)
       i += (@width/steps)
 
 
     j = 0
-    # counter = 0
     while (j < @rec_height)
       $("canvas").drawLine
         layer: true
@@ -221,32 +229,21 @@ class window.Game
         strokeWidth: 1,
         x1: @xoffset, y1: j+@yoffset,
         x2: @rec_width+@xoffset, y2: j+@yoffset
-      # counter++
-      # break if (counter > @cellsX)
       j += @height/vertsteps
 
-
-    start = 0#window.gridsize/2
-
-    # console.log "cellsX: #{@cellsX} and cellsy: #{@cellsY}"
-    @createString()
-    # console.log @string
     gridsize = window.gridsize
     for x in [0..@cellsX]
       for y in [0..@cellsY]
         @grid[x][y].draw(@xoffset, @yoffset)
-        # @grid[x][y].draw(0, 0)
 
   toggleMenu: ->
     $('#settings').toggle()
 
   createhandlers: ->
-    # TODO: move the board around! :)
     $(window).on
       click: (e) =>
         if e.button == 0
           @click(e)
-
       mousemove: (e) =>
         if @mousedown
           # Calculate the x/y difference
@@ -259,7 +256,8 @@ class window.Game
           # Save new position
           @mousedown = e
       mousedown: (e) =>
-        @mousedown = e
+        unless $('#settings').is ":visible"
+          @mousedown = e
       mouseup: (e) =>
         @mousedown = null
       resize: (e) =>
@@ -285,7 +283,6 @@ class window.Game
     $('#reset').on
       click: (e) =>
         e.stopPropagation()
-        console.log "Click"
         @reset()
         return false
     $('#settings').on
