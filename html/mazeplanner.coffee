@@ -20,6 +20,8 @@ class Obstacle
         @color = "#B0B0B0"
       when 3
         @color = "#B00000"
+      when 4
+        @color = "#FF00FF"
       when 5
         @color = "#00FFFF"
 
@@ -80,11 +82,15 @@ class window.Game
     @xoffset = 100#xoffset
     @yoffset = 100#yoffset
 
+    @overlay = true
+
     @lastdown = 0
 
     @hasmoved
     @cookiename = "maze"
     @path = []
+
+    @redrawn = false
 
 
     @checkDims()
@@ -481,8 +487,28 @@ class window.Game
     $('#currentwidth').html @cellsX+1
 
   createhandlers: ->
+    ex = 0
+    ey = 0
     $("html").on
       mousemove: (e) =>
+        if @overlay
+          inx = e.clientX in [@xoffset..@rec_width+@xoffset]
+          iny = e.clientY in [@yoffset..@rec_height+@yoffset]
+          if inx and iny
+            x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
+            y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
+            # # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
+            size = if e.shiftKey then 1 else 2
+            fake = new Obstacle(x,y,size, size,4)
+            @redrawContext() if ex != x or ey != y
+            fake.draw(@xoffset, @yoffset)
+            ex = x
+            ey = y
+            @redraw = true
+          else
+            if @redraw
+              @redrawContext()
+            @redraw = false
         if @mousedown
           # Calculate the x/y difference
           xdiff = @mousedown.clientX - e.clientX
@@ -550,7 +576,6 @@ class window.Game
               jPrompt "Copy this string and give it to a friend who wants to see your maze", @string, "Prompt Dialog", (r) ->
             when "u"
               jPrompt "This is a Link to your Maze", "http://mazeplanner.is-a-geek.ch?string=#{@string}", "Prompt Dialog", (r) ->
-
 
       load: =>
         @load()
