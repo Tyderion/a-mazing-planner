@@ -21,7 +21,7 @@ class Obstacle
       when 3
         @color = "#B00000"
       when 5
-        @color = "#00FF00"
+        @color = "#00FFFF"
 
 
     @type = 0 unless @type
@@ -133,19 +133,18 @@ class window.Game
 
 
   readString: ->
-    #TODO: Save type 3 in path.
-    # if @string
-    #   strings = @string.split(/;/)
-    #   for obstacle in strings
-    #     unless obstacle is ""
-    #       attrs = obstacle.split(/,/)
-    #       attrs = (parseInt(ele) for ele in attrs)
-    #       [x, y, width, height, type,num] = attrs
-    #       @grid[x][y] = new Obstacle(x,y, width, height, type, num)
-    #       if type is 3
-    #         @path[num] = [x,y]
-    #   # console.log "Parsed #{numobstacles} Obstacles and #{numblocked} Blocked cells"
-    #   # @debug()
+    if @string
+      strings = @string.split(/;/)
+      for obstacle in strings
+        unless obstacle is ""
+          attrs = obstacle.split(/,/)
+          attrs = (parseInt(ele) for ele in attrs)
+          [x, y, width, height, type,num] = attrs
+          @grid[x][y] = new Obstacle(x,y, width, height, type, num)
+          if type is 3
+            @path[num] = [x,y]
+      # console.log "Parsed #{numobstacles} Obstacles and #{numblocked} Blocked cells"
+      # @debug()
 
   createString: ->
     @string = ""
@@ -273,14 +272,14 @@ class window.Game
           @grid[row][col] = new Obstacle(row, col, 1,1,0)
     index = 0
     for coords in @path
-      console.log coords
+      # console.log coords
       @grid[coords[0]][coords[1]] = new Obstacle(coords[0],coords[1], 1,1, 3, index)
       index++
     @redrawContext()
 
   calculatePath: ->
     @removePath()
-    console.log @path
+    # console.log @path
 
     unless @path.length < 2
 
@@ -290,7 +289,7 @@ class window.Game
           if current in [1, @constructor.BLOCKED] then 0 else 1
 
 
-      console.log  array
+      # console.log  array
 
       # graph = new Graph([[1, 1, 1, 1], [0, 2, 1, 0], [0, 0, 1, 1]])
       graph = new Graph(array)
@@ -314,9 +313,9 @@ class window.Game
       y = result[index].y
       element = @grid[x][y]
       if element.type is 5
-        console.log "Adjusting bias for #{x},#{y}: #{element.color}"
+        # console.log "Adjusting bias for #{x},#{y}: #{element.color}"
         element.adjustBias(-0.2)
-        console.log "Adjusted bias for #{x},#{y}: #{element.color}"
+        # console.log "Adjusted bias for #{x},#{y}: #{element.color}"
       else if element.type == 3
         @grid[x][y] = new Obstacle(x, y, 1, 1, 5, element.num)
       else
