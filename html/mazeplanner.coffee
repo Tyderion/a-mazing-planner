@@ -64,7 +64,7 @@ class window.Game
 
 
 
-  constructor: (context, cellsX, cellsY, string, xoffset = 100, yoffset = 100) ->
+  constructor: (context, cellsX, cellsY, string) -> #, xoffset = 100, yoffset = 100) ->
     @width = 0
     @height = 0
     @cellsX = cellsX-1
@@ -77,8 +77,8 @@ class window.Game
     @rec_height = 0
     @obstacle_height = 2
     @obstacle_width = 2
-    @xoffset = xoffset
-    @yoffset = yoffset
+    @xoffset = 100#xoffset
+    @yoffset = 100#yoffset
 
     @movestart
     @cookiename = "maze"
@@ -92,7 +92,7 @@ class window.Game
              new Obstacle(row, col, 1,1)
     @createhandlers()
     @load() if @string is ""
-    @redrawContext()
+    # @redrawContext()
     $('#start').remove()
 
   adjustSize: (height, width)->
@@ -117,6 +117,8 @@ class window.Game
     @grid = for row in [0..@cellsX]
       for col in [0..@cellsY]
         new Obstacle(row, col, 1,1,0)
+    @xoffset = 100
+    @yoffset = 100
     @path = []
     @redrawContext()
 
@@ -129,25 +131,34 @@ class window.Game
     @string = $.cookie(@cookiename)
     @readString()
     @createString()
+    @redrawContext()
     # @debug()
 
 
   readString: ->
     if @string
       strings = @string.split(/;/)
+      index = 0
       for obstacle in strings
         unless obstacle is ""
           attrs = obstacle.split(/,/)
           attrs = (parseInt(ele) for ele in attrs)
-          [x, y, width, height, type,num] = attrs
-          @grid[x][y] = new Obstacle(x,y, width, height, type, num)
-          if type is 3
-            @path[num] = [x,y]
+          if index is 0
+            console.log "Setting offset: #{attrs[0]},#{attrs[1]}"
+            @xoffset = attrs[0]
+            @yoffset = attrs[1]
+            index++
+          else
+            [x, y, width, height, type,num] = attrs
+            @grid[x][y] = new Obstacle(x,y, width, height, type, num)
+            if type is 3
+              @path[num] = [x,y]
       # console.log "Parsed #{numobstacles} Obstacles and #{numblocked} Blocked cells"
       # @debug()
 
   createString: ->
-    @string = ""
+    @string = "#{@xoffset},#{@yoffset};"
+    console.log "Saving offset: #{@string}"
     for i in [0..@cellsX]
       for j in [0..@cellsY]
         ele = @grid[i][j]
@@ -183,7 +194,7 @@ class window.Game
     @checkDims()
     @context.canvas.width  = @width;
     @context.canvas.height = @height;
-    @drawGrid(0,0)
+    @drawGrid(@xoffset, @yoffset)
     @timeout = 0
 
   checkDims: ->
@@ -344,7 +355,7 @@ class window.Game
       group: "grid"
       strokeStyle: "#000",
       strokeWidth: 2
-      x: x+@xoffset, y: y+@yoffset,
+      x: x, y: y,
       width: @rec_width
       height: @rec_height
       fromCenter: false
