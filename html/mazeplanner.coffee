@@ -115,14 +115,16 @@ class window.Game
 
 
   reset: ->
-    $.removeCookie @cookiename
-    @grid = for row in [0..@cellsX]
-      for col in [0..@cellsY]
-        new Obstacle(row, col, 1,1,0)
-    @xoffset = 100
-    @yoffset = 100
-    @path = []
-    @redrawContext()
+    jConfirm "Do you really want to reset the Maze?", "Confirmation Dialog", (r) =>
+      if r
+        $.removeCookie @cookiename
+        @grid = for row in [0..@cellsX]
+          for col in [0..@cellsY]
+            new Obstacle(row, col, 1,1,0)
+        @xoffset = 100
+        @yoffset = 100
+        @path = []
+        @redrawContext()
 
 
   save: ->
@@ -134,7 +136,7 @@ class window.Game
     if @string
       @readString()
     else
-      alert "Press 'o' to open the options menu"
+      jAlert "Press 'o' to open the options menu", "Alert Dialog"
     @createString()
     @redrawContext()
     # @debug()
@@ -345,7 +347,7 @@ class window.Game
         @grid[x][y] = new Obstacle(x, y, 1, 1, 5)
       @redrawContext()
       if index is result.length-1
-        alert "Your Maze is #{result.length} Tiles long."
+        jAlert "Your Maze is #{result.length} Tiles long.", "Alert Dialog"
       else
         @animatePath(index+1, result)
 
@@ -483,8 +485,7 @@ class window.Game
             when "o"
               @toggleMenu()
             when "r"
-              if confirm("Do you really want to reset the Maze?")
-                @reset()
+              @reset()
             when "c"
               @calculatePath()
 
