@@ -93,7 +93,10 @@ class window.Game
       	for col in [0..@cellsY]
              new Obstacle(row, col, 1,1)
     @createhandlers()
-    @load($.cookie(@cookiename))
+    if string
+      @load(string)
+    else
+      @load($.cookie(@cookiename))
     # @redrawContext()
     $('#start').remove()
 
@@ -540,6 +543,8 @@ class window.Game
                 @redrawContext()
             when "s"
               jPrompt "Copy this string and give it to a friend who wants to see your maze", @string, "Prompt Dialog", (r) ->
+            when "u"
+              jPrompt "This is a Link to your Maze", "http://mazeplanner.is-a-geek.ch?string=#{@string}", "Prompt Dialog", (r) ->
 
 
       load: =>

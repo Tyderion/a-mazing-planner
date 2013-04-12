@@ -13,6 +13,17 @@ $ ->
       context = drawingCanvas.getContext('2d');
 
 
+      prmstr = window.location.search.substr(1)
+      prmarr = prmstr.split("&")
+      params = {}
+      i = 0
+
+      while i < prmarr.length
+        tmparr = prmarr[i].split("=")
+        params[tmparr[0]] = tmparr[1]
+        i++
+
+      console.log params
       # width = window.innerWidth
       # height = window.innerHeight
 
@@ -28,7 +39,10 @@ $ ->
       # else
       #   str = ""
       # console.log "Gridsize: #{window.gridsize
-      game = new  window.Game(context,$('#heightslider').get(0).value,$('#widthslider').get(0).value, "")
+
+      string = ""
+      string = params.string if params.string
+      game = new  window.Game(context,$('#heightslider').get(0).value,$('#widthslider').get(0).value, string)
 
 
 
