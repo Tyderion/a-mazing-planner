@@ -44,7 +44,7 @@ class Obstacle
           strokeWidth: 2
           x: x+width/2
           y: y+height/2
-          font: "36pt Verdana, sans-serif"
+          font: "#{window.gridsize/3*2}pt Verdana, sans-serif"
           text: "#{@num}"
 
 
