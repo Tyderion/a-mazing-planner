@@ -322,6 +322,8 @@ class window.Game
         @grid[x][y] = new Obstacle(x, y, 1, 1, 5)
       @redrawContext()
       @animatePath(index+1, result) if index < result.length-1
+      if index is result.length-1
+        alert "Your Maze is #{result.length} Tiles long."
     , window.gridsize*6
 
 
