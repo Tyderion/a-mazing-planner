@@ -329,18 +329,27 @@ class window.Game
       y = result[index].y
       element = @grid[x][y]
       if element.type is 5
-        # console.log "Adjusting bias for #{x},#{y}: #{element.color}"
-        element.adjustBias(-0.2)
-        # console.log "Adjusted bias for #{x},#{y}: #{element.color}"
+        factor = -0.2
+        bias = if element.color_bias in [undefined, 0] then -1 else element.color_bias
+        adjusted = bias*factor
+        adjusted*=-1 if adjusted > 0
+
+        # console.log "element-bias is  #{bias} and factor is : #{factor} and adjusted is #{adjusted}"
+        element.adjustBias(adjusted)
+        # console.log "element-bias is  #{element.bias}"
+
+
       else if element.type == 3
         @grid[x][y] = new Obstacle(x, y, 1, 1, 5, element.num)
       else
         @grid[x][y] = new Obstacle(x, y, 1, 1, 5)
       @redrawContext()
-      @animatePath(index+1, result) if index < result.length-1
       if index is result.length-1
         alert "Your Maze is #{result.length} Tiles long."
-    , window.gridsize*6
+      else
+        @animatePath(index+1, result)
+
+    , window.gridsize*4.5
 
 
 
