@@ -61,6 +61,7 @@ class window.Game
 
     @movestart
     @cookiename = "maze"
+    @path = []
 
 
     @checkDims()
@@ -110,14 +111,17 @@ class window.Game
 
 
   readString: ->
+    #TODO: Save type 3 in path.
     if @string
       strings = @string.split(/;/)
       for obstacle in strings
         unless obstacle is ""
           attrs = obstacle.split(/,/)
           attrs = (parseInt(ele) for ele in attrs)
-          [x, y, width, height, type] = attrs
+          [x, y, width, height, type,num] = attrs
           @grid[x][y] = new Obstacle(x,y, width, height, type)
+          if type is 3
+            @path[num] = [x,y]
           for i in [x..x+width-1]
             for j in [y..y+height-1]
               unless i is x and j is y
@@ -132,7 +136,19 @@ class window.Game
         # If it is a tower, save it
         if (ele.type >= 1)
           # cellx, celly, width, height, type (just here to be future proof)
-          @string += "#{i},#{j},#{ele.width},#{ele.height},#{ele.type};"
+          num = ""
+          if ele.type == 3
+            index = 0
+            for coords in @path
+              if coords[0] == i and coords[1] == j
+                num = ",#{index}"
+              index++
+            console.log @path
+          #   console.log "Searching: [#{i},#{j}] in the path"
+          #   console.log "Path number: #{num}"
+          # console.log "Number is: #{num}!"
+          @string += "#{i},#{j},#{ele.width},#{ele.height},#{ele.type}#{num};"
+    # console.log @string
 
   debug: ->
   #   for i in [0..@cellsX]
@@ -157,8 +173,8 @@ class window.Game
 
   # Return true if the block at x,y is or can be the topleft cell of a tower
   checkValidity: (x,y) =>
-    # If its outside, it is not valid xD
-    return false if (x< 0 or y < 0 or x > @cellsX or y > @cellsY)
+    # If its outside or part of it is outside, it is not valid xD
+    return false if (x< 0 or y < 0 or x > @cellsX or y > @cellsY or x+@obstacle_width-1 > @cellsX or y+@obstacle_height-1 > @cellsY)
     current = @grid[x][y].type
     # console.log "Current: #{current}"
     # If the current is a tower, we can remove it
@@ -190,14 +206,25 @@ class window.Game
       console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
       current = @grid[x][y].type
       if current == 3
-        newval = current*-1 +3 #Swap 0 and 2
-        @grid[x][y].type= newval#new Obstacle(x,y,owidth, oheight, newval)
+        @grid[x][y].type= 0#new Obstacle(x,y,owidth, oheight, newval)
+        index = 0
+        for coords in @path
+          if coords[0] == x and coords[1] == y
+            path = []
+            if (index-1 >= 0)
+              path.push p for p in @path[0..index-1]
+            if (index+1 <= @path.length)
+              path.push p for p in @path[index+1..@path.length]
+            @path = path
+          index++
+
 
       if current < 2
         newval = current*-1 +1 #Swap 0 and 1
         if event.shiftKey
           newval = 3
           @obstacle_height = @obstacle_width = 1
+          @path.push [x,y]
         else
           @obstacle_height = @obstacle_width = 2
 
@@ -211,6 +238,12 @@ class window.Game
           # console.log @grid[x][y]
       @redrawContext()
       @save()
+
+
+  calculatePath: ->
+    console.log @path
+
+
 
 
   drawGrid: (x,y) ->
@@ -314,6 +347,8 @@ class window.Game
             when "r"
               if confirm("Do you really want to reset the Maze?")
                 @reset()
+            when "c"
+              @calculatePath()
       load: =>
         @load()
     $('#resetMaze').on
