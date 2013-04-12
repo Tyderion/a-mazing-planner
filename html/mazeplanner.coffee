@@ -43,7 +43,7 @@ class window.Game
 
 
 
-  constructor: (context, cellsX, cellsY, string) ->
+  constructor: (context, cellsX, cellsY, string, xoffset = 100, yoffset = 100) ->
     @width = 0
     @height = 0
     @cellsX = cellsX-1
@@ -56,8 +56,8 @@ class window.Game
     @rec_height = 0
     @obstacle_height = 2
     @obstacle_width = 2
-    @xoffset = 100
-    @yoffset = 100
+    @xoffset = xoffset
+    @yoffset = yoffset
 
     @movestart
     @cookiename = "maze"
@@ -71,6 +71,23 @@ class window.Game
     @createhandlers()
     @load() if @string is ""
     @redrawContext()
+
+
+  adjustSize: (height, width)->
+    grid = @grid
+    @cellsX = width
+    @cellsY = height
+    @grid = for row in [0..@cellsX]
+        for col in [0..@cellsY]
+          if grid[row]?[col] is undefined
+             new Obstacle(row, col, 1,1)
+          else
+            @obstacle_width = grid[row][col].width
+            @obstacle_height = grid[row][col].height
+            if col+@obstacle_height > @cellsY or row+@obstacle_width > @cellsX
+              new Obstacle(row, col, 1,1)
+            else
+              new Obstacle(row, col, @obstacle_width ,  @obstacle_height, grid[row][col].type)
 
 
   reset: ->
@@ -104,7 +121,8 @@ class window.Game
           for i in [x..x+width-1]
             for j in [y..y+height-1]
               unless i is x and j is y
-                @grid[i][j].type = @constructor.NONE
+                if i < @cellsX and j < @cellsY
+                  @grid[i][j].type = @constructor.BLOCKED
 
   createString: ->
     @string = ""
@@ -117,11 +135,11 @@ class window.Game
           @string += "#{i},#{j},#{ele.width},#{ele.height},#{ele.type};"
 
   debug: ->
-    for i in [0..@cellsX]
-      for j in [0..@cellsY]
-        @string = "#{@string} #{@grid[j][i].type}"
-      @string = "#{@string} \n"
-    @string = "#{@string} \n\n"
+  #   for i in [0..@cellsX]
+  #     for j in [0..@cellsY]
+  #       @string = "#{@string} #{@grid[j][i].type}"
+  #     @string = "#{@string} \n"
+  #   @string = "#{@string} \n\n"
 
   redrawContext:  =>
     $("canvas").clearCanvas()
@@ -310,7 +328,12 @@ class window.Game
       change: (e) =>
         id = $(e.currentTarget).attr 'id'
         property = id[..id.length-7]
-        $("#current#{property}").html $("##{property}slider").get(0).value
+        $("#current#{property}").html (parseInt($("##{property}slider").get(0).value)+1)
       mousemove: (e) =>
         e.stopPropagation()
     , "[id*=slider]"
+    $('#save').on
+      click: =>
+        @adjustSize(parseInt($("#heightslider").get(0).value), parseInt($("#widthslider").get(0).value))
+        # this = new Game(@context, @celllX, @cellsY, @string, @xoffset, @yoffset)
+        @redrawContext()
