@@ -22,7 +22,7 @@ $ ->
     #   console.log "Loaded cookie: #{str}"
     # else
     #   str = ""
-    # console.log "Gridsize: #{window.gridsize}"
+    # console.log "Gridsize: #{window.gridsize
     game = new  window.Game(context,10,10, "")
 
 

@@ -13,3 +13,15 @@
 
 }
 
+#settings > div, #settings > div > div, #settings > label, #settings > button {
+  float: left;
+  clear: both;
+}
+
+#settings > div >input[type="range"] {
+  float: right;
+  clear: top;
+  margin-right: 20%;
+}
+
+

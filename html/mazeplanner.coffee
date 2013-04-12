@@ -247,7 +247,7 @@ class window.Game
     $('#settings').toggle()
 
   createhandlers: ->
-    $(window).on
+    $("html").on
       click: (e) =>
         if e.button == 0
           @click(e)
@@ -257,13 +257,20 @@ class window.Game
           xdiff = @mousedown.clientX - e.clientX
           ydiff = @mousedown.clientY - e.clientY
           # Adjust by that difference
-          @xoffset -= xdiff
-          @yoffset -= ydiff
-          @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
+          # console.log e
+          if $('#settings').is ":visible" #and e.target is not
+            ele = $('#settings')
+            # console.log ele.position()
+            ele.css
+              top: ele.position().top -= ydiff
+              left: ele.position().left -= xdiff
+          else
+            @xoffset -= xdiff
+            @yoffset -= ydiff
+            @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
           # Save new position
           @mousedown = e
       mousedown: (e) =>
-        unless $('#settings').is ":visible"
           @mousedown = e
       mouseup: (e) =>
         @mousedown = null
@@ -281,13 +288,17 @@ class window.Game
         @save()
         return null
       keypress: (e) =>
-        if String.fromCharCode(e.charCode) == "o"
-          @toggleMenu()
-      # keyup: (e) =>
-      #   console.log e.keyCode
+        console.log e
+        unless e.metaKey or e.shiftKey or e.altKey or e.controlKey
+          switch String.fromCharCode(e.charCode)
+            when "o"
+              @toggleMenu()
+            when "r"
+              if confirm("Do you really want to reset the Maze?")
+                @reset()
       load: =>
         @load()
-    $('#reset').on
+    $('#resetMaze').on
       click: (e) =>
         e.stopPropagation()
         @reset()
@@ -295,3 +306,11 @@ class window.Game
     $('#settings').on
       click: (e) =>
         e.stopPropagation()
+    $('#settings').on
+      change: (e) =>
+        id = $(e.currentTarget).attr 'id'
+        property = id[..id.length-7]
+        $("#current#{property}").html $("##{property}slider").get(0).value
+      mousemove: (e) =>
+        e.stopPropagation()
+    , "[id*=slider]"
