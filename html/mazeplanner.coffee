@@ -12,6 +12,7 @@ class Obstacle
     @type = type
     @color = "#FFF"
     @num = num
+    @color_bias = 0
     switch type
       when 1
         @color = "#000"
@@ -19,21 +20,26 @@ class Obstacle
         @color = "#B0B0B0"
       when 3
         @color = "#B00000"
+      when 5
+        @color = "#00FF00"
 
 
     @type = 0 unless @type
     # console.log "type: #{@type}"
 
+  adjustBias: (adjustment) ->
+    @color_bias += adjustment
+
 
   draw: (xoff, yoff)->
-    # Only draw if type is 1,2,3 or 4
+    # Only draw if type is smaller than window.Game.BLOCKED
     if 0 < @type < window.Game.BLOCKED
       x = Math.floor(@posx*window.gridsize)+xoff
       y = Math.floor(@posy*window.gridsize)+yoff
       width = @width*window.gridsize
       height = @height*window.gridsize
       $('canvas').drawRect
-        fillStyle: @color,
+        fillStyle: ColorLuminance(@color, @color_bias),
         x: x, y: y
         width: width
         height: height
@@ -52,7 +58,7 @@ class Obstacle
 
 class window.Game
   @game
-  @BLOCKED = 5
+  @BLOCKED = 99
   @it: ->
     return @game
 
@@ -111,6 +117,7 @@ class window.Game
     @grid = for row in [0..@cellsX]
       for col in [0..@cellsY]
         new Obstacle(row, col, 1,1,0)
+    @path = []
     @redrawContext()
 
 
@@ -127,18 +134,18 @@ class window.Game
 
   readString: ->
     #TODO: Save type 3 in path.
-    if @string
-      strings = @string.split(/;/)
-      for obstacle in strings
-        unless obstacle is ""
-          attrs = obstacle.split(/,/)
-          attrs = (parseInt(ele) for ele in attrs)
-          [x, y, width, height, type,num] = attrs
-          @grid[x][y] = new Obstacle(x,y, width, height, type, num)
-          if type is 3
-            @path[num] = [x,y]
-      # console.log "Parsed #{numobstacles} Obstacles and #{numblocked} Blocked cells"
-      # @debug()
+    # if @string
+    #   strings = @string.split(/;/)
+    #   for obstacle in strings
+    #     unless obstacle is ""
+    #       attrs = obstacle.split(/,/)
+    #       attrs = (parseInt(ele) for ele in attrs)
+    #       [x, y, width, height, type,num] = attrs
+    #       @grid[x][y] = new Obstacle(x,y, width, height, type, num)
+    #       if type is 3
+    #         @path[num] = [x,y]
+    #   # console.log "Parsed #{numobstacles} Obstacles and #{numblocked} Blocked cells"
+    #   # @debug()
 
   createString: ->
     @string = ""
@@ -258,8 +265,67 @@ class window.Game
       @save()
 
 
+  removePath: ->
+    for row in [0..@cellsX]
+      for col in [0..@cellsY]
+        current = @grid[row][col].type
+        if current is 5
+          @grid[row][col] = new Obstacle(row, col, 1,1,0)
+    index = 0
+    for coords in @path
+      console.log coords
+      @grid[coords[0]][coords[1]] = new Obstacle(coords[0],coords[1], 1,1, 3, index)
+      index++
+    @redrawContext()
+
   calculatePath: ->
+    @removePath()
     console.log @path
+
+    unless @path.length < 2
+
+      array = for row in [0..@cellsX]
+        for col in [0..@cellsY]
+          current = @grid[row][col].type
+          if current in [1, @constructor.BLOCKED] then 0 else 1
+
+
+      console.log  array
+
+      # graph = new Graph([[1, 1, 1, 1], [0, 2, 1, 0], [0, 0, 1, 1]])
+      graph = new Graph(array)
+
+      index_start = 0
+      result = []
+      while (index_start < @path.length-1)
+        start = graph.nodes[@path[index_start][0]][@path[index_start][1]]
+        end = graph.nodes[@path[index_start+1][0]][@path[index_start+1][1]]
+        # console.log "Calculating path from #{index_start} to #{index_start+1}"§
+        result.push node for node in  astar.search(graph.nodes, start, end)
+        index_start++
+
+      result.unshift(graph.nodes[@path[0][0]][@path[0][1]])
+
+      @animatePath(0, result)
+
+  animatePath: (index, result) ->
+    window.setTimeout =>
+      x = result[index].x
+      y = result[index].y
+      element = @grid[x][y]
+      if element.type is 5
+        console.log "Adjusting bias for #{x},#{y}: #{element.color}"
+        element.adjustBias(-0.2)
+        console.log "Adjusted bias for #{x},#{y}: #{element.color}"
+      else if element.type == 3
+        @grid[x][y] = new Obstacle(x, y, 1, 1, 5, element.num)
+      else
+        @grid[x][y] = new Obstacle(x, y, 1, 1, 5)
+      @redrawContext()
+      @animatePath(index+1, result) if index < result.length-1
+    , 300
+
+
 
 # result is an array containing the shortest path
 
@@ -359,6 +425,10 @@ class window.Game
         @save()
         return null
       keypress: (e) =>
+        if e.shiftKey
+          switch String.fromCharCode(e.charCode)
+            when "C"
+              @removePath()
         unless e.metaKey or e.shiftKey or e.altKey or e.controlKey
           switch String.fromCharCode(e.charCode)
             when "o"
@@ -368,6 +438,7 @@ class window.Game
                 @reset()
             when "c"
               @calculatePath()
+
       load: =>
         @load()
     $('#resetMaze').on
