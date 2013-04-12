@@ -15,7 +15,7 @@ class Obstacle
     @color_bias = 0
     switch type
       when 1
-        @color = "#000"
+        @color = "#686868"
       when 2
         @color = "#B0B0B0"
       when 3
@@ -361,17 +361,32 @@ class window.Game
   drawGrid: (x,y) ->
     steps = @width/window.gridsize
     vertsteps = (@height/@width)*steps
-    @rec_width = Math.min (@width/steps)*(@cellsX+1), @width-@xoffset
-    @rec_height = Math.min (@height/vertsteps)*(@cellsY+1), @height-@yoffset
+    @rec_width = Math.min (@width/steps)*(@cellsX+1), @width-@xoffset-1
+    @rec_height = Math.min (@height/vertsteps)*(@cellsY+1), @height-@yoffset-1
+    if x < 0
+      recx =  1
+      recwidth = @rec_width + x
+      # console.log "X is : #{x} and width: #{@rec_width} "
+      # @rec_width += x
+    else
+      recx = x
+      recwidth = @rec_width
+    if y < 0
+      recy =  1
+      recheight = @rec_height + y
+      # @rec_height += y
+    else
+      recy = y
+      recheight = @rec_height
     $('canvas').drawRect
       layer: true
       name: "border"
       group: "grid"
       strokeStyle: "#000",
       strokeWidth: 2
-      x: x, y: y,
-      width: @rec_width
-      height: @rec_height
+      x: recx, y: recy
+      width: recwidth
+      height: recheight
       fromCenter: false
 
 
