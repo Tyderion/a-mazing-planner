@@ -1,6 +1,6 @@
 class Obstacle
 
-  constructor: (posx, posy, width, height, type) ->
+  constructor: (posx, posy, width, height, type, num = -1) ->
     # Default
     # Width, height = 2,2 (2 cells high, 2 cells wide)
     @posx = posx
@@ -9,6 +9,7 @@ class Obstacle
     @height = height
     @type = type
     @color = "#FFF"
+    @num = num
     switch type
       when 1
         @color = "#000"
@@ -25,13 +26,27 @@ class Obstacle
   draw: (xoff, yoff)->
     # Only draw if type is 1,2,3 or 4
     if 0 < @type < window.Game.BLOCKED
+      x = Math.floor(@posx*window.gridsize)+xoff
+      y = Math.floor(@posy*window.gridsize)+yoff
+      width = @width*window.gridsize
+      height = @height*window.gridsize
       $('canvas').drawRect
         fillStyle: @color,
-        x: Math.floor(@posx*window.gridsize)+xoff, y: Math.floor(@posy*window.gridsize)+yoff
-        width: (@width)*window.gridsize
-        height: (@height)*window.gridsize
+        x: x, y: y
+        width: width
+        height: height
         fromCenter: false
         cornerRadius: window.gridsize/3,
+      if @num >= 0
+        $("canvas").drawText
+          fillStyle: "#9cf"
+          strokeStyle: "#25a"
+          strokeWidth: 2
+          x: x+width/2
+          y: y+height/2
+          font: "36pt Verdana, sans-serif"
+          text: "#{@num}"
+
 
 class window.Game
   @game
@@ -88,7 +103,7 @@ class window.Game
             if col+@obstacle_height > @cellsY or row+@obstacle_width > @cellsX
               new Obstacle(row, col, 1,1)
             else
-              new Obstacle(row, col, @obstacle_width ,  @obstacle_height, grid[row][col].type)
+              new Obstacle(row, col, @obstacle_width ,  @obstacle_height, grid[row][col].type, grid[row][col].num)
 
 
   reset: ->
@@ -119,7 +134,7 @@ class window.Game
           attrs = obstacle.split(/,/)
           attrs = (parseInt(ele) for ele in attrs)
           [x, y, width, height, type,num] = attrs
-          @grid[x][y] = new Obstacle(x,y, width, height, type)
+          @grid[x][y] = new Obstacle(x,y, width, height, type, num)
           if type is 3
             @path[num] = [x,y]
           for i in [x..x+width-1]
@@ -143,7 +158,6 @@ class window.Game
               if coords[0] == i and coords[1] == j
                 num = ",#{index}"
               index++
-            console.log @path
           #   console.log "Searching: [#{i},#{j}] in the path"
           #   console.log "Path number: #{num}"
           # console.log "Number is: #{num}!"
@@ -229,7 +243,7 @@ class window.Game
           @obstacle_height = @obstacle_width = 2
 
         if @checkValidity(x,y)
-          @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval)
+          @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval, @path.length-1)
           for i in [0..@obstacle_height-1]
             for j in [0..@obstacle_width-1]
               unless i is 0 and j is 0
