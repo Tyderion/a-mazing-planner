@@ -3,6 +3,8 @@ class Obstacle
   constructor: (posx, posy, width, height, type, num = -1) ->
     # Default
     # Width, height = 2,2 (2 cells high, 2 cells wide)
+    # console.log "Obstacle"
+    # console.log "Obstacle with num#{num}"
     @posx = posx
     @posy = posy
     @width = width
@@ -56,8 +58,6 @@ class window.Game
 
 
 
-
-
   constructor: (context, cellsX, cellsY, string, xoffset = 100, yoffset = 100) ->
     @width = 0
     @height = 0
@@ -87,7 +87,6 @@ class window.Game
     @createhandlers()
     @load() if @string is ""
     @redrawContext()
-
 
   adjustSize: (height, width)->
     grid = @grid
@@ -122,7 +121,7 @@ class window.Game
     @string = $.cookie(@cookiename)
     @readString()
     @createString()
-    @debug()
+    # @debug()
 
 
   readString: ->
@@ -137,11 +136,8 @@ class window.Game
           @grid[x][y] = new Obstacle(x,y, width, height, type, num)
           if type is 3
             @path[num] = [x,y]
-          for i in [x..x+width-1]
-            for j in [y..y+height-1]
-              unless i is x and j is y
-                if i < @cellsX and j < @cellsY
-                  @grid[i][j].type = @constructor.BLOCKED
+      # console.log "Parsed #{numobstacles} Obstacles and #{numblocked} Blocked cells"
+      # @debug()
 
   createString: ->
     @string = ""
@@ -165,11 +161,15 @@ class window.Game
     # console.log @string
 
   debug: ->
-  #   for i in [0..@cellsX]
-  #     for j in [0..@cellsY]
-  #       @string = "#{@string} #{@grid[j][i].type}"
-  #     @string = "#{@string} \n"
-  #   @string = "#{@string} \n\n"
+    string = ""
+    for i in [0..@cellsX]
+      for j in [0..@cellsY]
+        string = "#{string} #{@grid[j][i].type}"
+      string = "#{string} \n"
+    string = "#{string} \n\n"
+    console.log string
+    @createString()
+    console.log @string.split /;/
 
   redrawContext:  =>
     $("canvas").clearCanvas()
@@ -189,6 +189,7 @@ class window.Game
   checkValidity: (x,y) =>
     # If its outside or part of it is outside, it is not valid xD
     return false if (x< 0 or y < 0 or x > @cellsX or y > @cellsY or x+@obstacle_width-1 > @cellsX or y+@obstacle_height-1 > @cellsY)
+    # console.log "Position #{x},#{y} with obstacle height: #{@obstacle_height} and cells: (#{@cellsX},#{@cellsY}"
     current = @grid[x][y].type
     # console.log "Current: #{current}"
     # If the current is a tower, we can remove it
@@ -200,9 +201,9 @@ class window.Game
       for i in [0..@obstacle_height-1]
         for j in [0..@obstacle_width-1]
           unless i is 0 and j is 0
-            # console.log "Testing (#{x}+#{j},#{y}+#{i})"
             break unless val
             val = false unless @grid[x+j][y+i].type is 0
+            # console.log "Testing (#{x}+#{j},#{y}+#{i}): #{val}, it's type is: #{@grid[x+j][y+i].type}"
       # console.log "Testing (#{x},#{y}) and it is #{val}"
       return val
     else
@@ -217,7 +218,7 @@ class window.Game
     if inx and iny
       x = Math.floor( Math.max(event.clientX-10-@xoffset,0) / window.gridsize)
       y = Math.floor( Math.max(event.clientY-10-@yoffset,0) / window.gridsize)
-      console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
+      # console.log "Coordinates: (#{event.clientX},#{event.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
       current = @grid[x][y].type
       if current == 3
         @grid[x][y].type= 0#new Obstacle(x,y,owidth, oheight, newval)
@@ -243,19 +244,23 @@ class window.Game
           @obstacle_height = @obstacle_width = 2
 
         if @checkValidity(x,y)
-          @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval, @path.length-1)
+          @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval, if newval is 3 then @path.length-1 else undefined )
           for i in [0..@obstacle_height-1]
             for j in [0..@obstacle_width-1]
               unless i is 0 and j is 0
                 # Swap 5 and 0
+                # console.log "Swapping: #{@grid[x+j][y+i].type}"
                 @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
           # console.log @grid[x][y]
+      # @debug()
       @redrawContext()
       @save()
 
 
   calculatePath: ->
     console.log @path
+
+# result is an array containing the shortest path
 
 
 
@@ -353,7 +358,6 @@ class window.Game
         @save()
         return null
       keypress: (e) =>
-        console.log e
         unless e.metaKey or e.shiftKey or e.altKey or e.controlKey
           switch String.fromCharCode(e.charCode)
             when "o"
