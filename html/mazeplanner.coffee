@@ -93,8 +93,10 @@ class window.Game
       	for col in [0..@cellsY]
              new Obstacle(row, col, 1,1)
     @createhandlers()
-    if string
+    @dosave = true
+    if string != ""
       @load(string)
+      @dosave = false
     else
       @load($.cookie(@cookiename))
     # @redrawContext()
@@ -130,9 +132,11 @@ class window.Game
         @redrawContext()
 
 
-  save: ->
-    @createString()
-    $.cookie @cookiename, @string
+  save: (override = false)->
+    if override or @dosave
+      @removePath()
+      @createString()
+      $.cookie @cookiename, @string
 
   load: (string)->
     @string = string
@@ -336,6 +340,7 @@ class window.Game
         index_start++
 
       result.unshift(graph.nodes[@path[0][0]][@path[0][1]])
+      result.push(graph.nodes[@path[@path.length-1][0]][@path[@path.length-1][1]])
 
       jAlert "Path Calculated", "Alert Dialog"
 
@@ -570,4 +575,4 @@ class window.Game
         @adjustSize(parseInt($("#heightslider").get(0).value), parseInt($("#widthslider").get(0).value))
         # this = new Game(@context, @celllX, @cellsY, @string, @xoffset, @yoffset)
         @redrawContext()
-        @save()
+        @save(true)
