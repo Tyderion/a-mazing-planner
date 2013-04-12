@@ -93,7 +93,7 @@ class window.Game
       	for col in [0..@cellsY]
              new Obstacle(row, col, 1,1)
     @createhandlers()
-    @load()
+    @load($.cookie(@cookiename))
     # @redrawContext()
     $('#start').remove()
 
@@ -131,8 +131,8 @@ class window.Game
     @createString()
     $.cookie @cookiename, @string
 
-  load: ->
-    @string = $.cookie(@cookiename)
+  load: (string)->
+    @string = string
     if @string
       @readString()
     else
@@ -151,20 +151,30 @@ class window.Game
           attrs = obstacle.split(/,/)
           attrs = (parseInt(ele) for ele in attrs)
           if index is 0
-            console.log "Setting offset: #{attrs[0]},#{attrs[1]}"
+            # console.log "Setting offset: #{attrs[0]},#{attrs[1]} and size #{attrs[2]},#{attrs[3]}"
             @xoffset = attrs[0]
             @yoffset = attrs[1]
+
+            @cellsX = attrs[2]
+
+            @cellsY = attrs[3]
+            window.gridsize = attrs[4]
+            @grid = for row in [0..@cellsX]
+              for col in [0..@cellsY]
+                new Obstacle(row, col, 1,1,0)
             index++
           else
             [x, y, width, height, type,num] = attrs
-            @grid[x][y] = new Obstacle(x,y, width, height, type, num)
+
             if type is 3
+              # console.log "Creating obstacle: #{x}, #{y}, #{width}, #{height}, #{type},#{num}"
               @path[num] = [x,y]
+            @grid[x][y] = new Obstacle(x,y, width, height, type, num)
       # console.log "Parsed #{numobstacles} Obstacles and #{numblocked} Blocked cells"
       # @debug()
 
   createString: ->
-    @string = "#{@xoffset},#{@yoffset};"
+    @string = "#{@xoffset},#{@yoffset},#{@cellsX},#{@cellsY},#{window.gridsize};"
     console.log "Saving offset: #{@string}"
     for i in [0..@cellsX]
       for j in [0..@cellsY]
@@ -175,6 +185,7 @@ class window.Game
           num = ""
           if ele.type == 3
             index = 0
+            # console.log @path
             for coords in @path
               if coords[0] == i and coords[1] == j
                 num = ",#{index}"
@@ -323,7 +334,38 @@ class window.Game
 
       result.unshift(graph.nodes[@path[0][0]][@path[0][1]])
 
-      @animatePath(0, result)
+      jAlert "Path Calculated", "Alert Dialog"
+
+      # @animatePath(0, result)
+      @instantPath(result)
+
+
+
+  instantPath:(result) ->
+    index = 0
+    while (index < result.length-1)
+      x = result[index].x
+      y = result[index].y
+      element = @grid[x][y]
+      if element.type is 5
+        factor = -0.2
+        bias = if element.color_bias in [undefined, 0] then -1 else element.color_bias
+        adjusted = bias*factor
+        adjusted*=-1 if adjusted > 0
+
+        # console.log "element-bias is  #{bias} and factor is : #{factor} and adjusted is #{adjusted}"
+        element.adjustBias(adjusted)
+        # console.log "element-bias is  #{element.bias}"
+
+
+      else if element.type == 3
+        @grid[x][y] = new Obstacle(x, y, 1, 1, 5, element.num)
+      else
+        @grid[x][y] = new Obstacle(x, y, 1, 1, 5)
+      if index is result.length-1
+        jAlert "Your Maze is #{result.length} Tiles long.", "Alert Dialog"
+      index++
+    @redrawContext()
 
   animatePath: (index, result) ->
     window.setTimeout =>
@@ -351,7 +393,7 @@ class window.Game
       else
         @animatePath(index+1, result)
 
-    , window.gridsize*4.5
+    , window.gridsize/10
 
 
 
@@ -425,6 +467,10 @@ class window.Game
 
   toggleMenu: ->
     $('#settings').toggle()
+    $('#heightslider').get(0).value = @cellsY
+    $('#currentheight').html @cellsY+1
+    $('#widthslider').get(0).value = @cellsX
+    $('#currentwidth').html @cellsX+1
 
   createhandlers: ->
     $("html").on
@@ -480,7 +526,7 @@ class window.Game
           switch String.fromCharCode(e.charCode)
             when "C"
               @removePath()
-        unless e.metaKey or e.shiftKey or e.altKey or e.controlKey
+        unless e.metaKey or e.shiftKey or e.altKey or e.ctrlKey
           switch String.fromCharCode(e.charCode)
             when "o"
               @toggleMenu()
@@ -488,6 +534,13 @@ class window.Game
               @reset()
             when "c"
               @calculatePath()
+            when "l"
+              jPrompt "Paste the save string", "", "Prompt Dialog", (r) =>
+                @load(r)
+                @redrawContext()
+            when "s"
+              jPrompt "Copy this string and give it to a friend who wants to see your maze", @string, "Prompt Dialog", (r) ->
+
 
       load: =>
         @load()
@@ -512,3 +565,4 @@ class window.Game
         @adjustSize(parseInt($("#heightslider").get(0).value), parseInt($("#widthslider").get(0).value))
         # this = new Game(@context, @celllX, @cellsY, @string, @xoffset, @yoffset)
         @redrawContext()
+        @save()
