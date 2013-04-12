@@ -80,7 +80,9 @@ class window.Game
     @xoffset = 100#xoffset
     @yoffset = 100#yoffset
 
-    @movestart
+    @lastdown = 0
+
+    @hasmoved
     @cookiename = "maze"
     @path = []
 
@@ -400,9 +402,6 @@ class window.Game
 
   createhandlers: ->
     $("html").on
-      click: (e) =>
-        if e.button == 0
-          @click(e)
       mousemove: (e) =>
         if @mousedown
           # Calculate the x/y difference
@@ -420,12 +419,21 @@ class window.Game
             @xoffset -= xdiff
             @yoffset -= ydiff
             @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
+          @hasmoved = true
           # Save new position
           @mousedown = e
       mousedown: (e) =>
-          @mousedown = e
+        @mousedown = e
+        @lastdown = new Date().getTime()
       mouseup: (e) =>
         @mousedown = null
+        # xdiff = Math.abs @hasmoved.clientX - e.clientX
+        # ydiff = Math.abs @hasmoved.clientY - e.clientY
+        # console.log "Move-distance: #{xdiff},#{ydiff}"
+        unless @hasmoved
+          if e.button == 0
+            @click(e)
+        @hasmoved = false
       resize: (e) =>
         # Use Timeout....
         @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0

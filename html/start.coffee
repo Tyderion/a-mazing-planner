@@ -28,7 +28,7 @@ $ ->
       # else
       #   str = ""
       # console.log "Gridsize: #{window.gridsize
-      game = new  window.Game(context,5,5, "")
+      game = new  window.Game(context,$('#heightslider').get(0).value,$('#widthslider').get(0).value, "")
 
 
 
