@@ -29,7 +29,6 @@ $ ->
       #   str = ""
       # console.log "Gridsize: #{window.gridsize
       game = new  window.Game(context,5,5, "")
-      alert "Press 'o' to open the options menu"
 
 
 

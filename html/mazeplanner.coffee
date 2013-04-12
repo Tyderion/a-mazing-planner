@@ -91,7 +91,7 @@ class window.Game
       	for col in [0..@cellsY]
              new Obstacle(row, col, 1,1)
     @createhandlers()
-    @load() if @string is ""
+    @load()
     # @redrawContext()
     $('#start').remove()
 
@@ -129,7 +129,10 @@ class window.Game
 
   load: ->
     @string = $.cookie(@cookiename)
-    @readString()
+    if @string
+      @readString()
+    else
+      alert "Press 'o' to open the options menu"
     @createString()
     @redrawContext()
     # @debug()
@@ -437,6 +440,8 @@ class window.Game
         @save()
         return null
       keypress: (e) =>
+        if e.keyCode is 27 # Escape
+          @toggleMenu()
         if e.shiftKey
           switch String.fromCharCode(e.charCode)
             when "C"
