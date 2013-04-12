@@ -323,7 +323,7 @@ class window.Game
         @grid[x][y] = new Obstacle(x, y, 1, 1, 5)
       @redrawContext()
       @animatePath(index+1, result) if index < result.length-1
-    , 300
+    , window.gridsize*6
 
 
 
