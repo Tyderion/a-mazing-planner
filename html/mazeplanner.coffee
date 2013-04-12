@@ -87,6 +87,7 @@ class window.Game
     @createhandlers()
     @load() if @string is ""
     @redrawContext()
+    $('#start').remove()
 
   adjustSize: (height, width)->
     grid = @grid
