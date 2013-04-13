@@ -33,19 +33,25 @@
 <div id="settings">
   <div>These Are the Settings</div>
   <button id="resetMaze">Reset the Maze</button>
-  <div id="heightSettings"
+  <div id="heightSettings">
     <label for="height" id="height">Height</label>
     <input name="height" id="heightslider" type="range" value="10" />
     <div class="note">Current value: <span id="currentheight">10</span></div>
   </div>
-  <div id="widthSettings"
+  <div id="widthSettings">
   <label for="width" id="width">width</label>
   <input name="width" id="widthslider" type="range"  value="10"/>
 
     <div class="note">Current value: <span id="currentwidth">10</span></div>
-</div>
-  <button id="save">Save Settings</button>
+  </div>
+  <label for="overlaycolor" id="overlay_clr_name">Overlay Color</label>
+  <input name="overlaycolor" type="color" id="overlay_clr" />
+  <label for="overlaycheckbox" id="overlay_chk_name">Overlay?</label>
+  <input name="overlaycheckbox" type="checkbox" id="overlay_chk" />
+  <label for="instant_draw_checkbox" id="instant_draw_chk_name">Draw path instantly?</label>
+  <input name="instant_draw_checkbox" type="checkbox" id="instant_draw_chk" />
 
+  <button id="save">Save Settings</button>
 
   <ul id="keyboard">
     <li>c: Calculate the Path</li>
@@ -60,7 +66,6 @@
     <li>l: load a maze</li>
   </ul>
 </div>
-
 
  </body>
 </html>

@@ -113,6 +113,7 @@ class window.Game
     @yoffset = 100#yoffset
 
     @overlay = true
+    @animate = true
 
     @lastdown = 0
 
@@ -383,7 +384,10 @@ class window.Game
       jAlert "Path Calculated", "Alert Dialog"
 
       # @animatePath(0, result)
-      @instantPath(result)
+      if @animate
+        @animatePath(0, result)
+      else
+        @instantPath(result)
 
 
 
@@ -647,6 +651,9 @@ class window.Game
     $('#save').on
       click: =>
         @adjustSize(parseInt($("#heightslider").get(0).value), parseInt($("#widthslider").get(0).value))
+        @overlay = if $('#overlay_chk').is(':checked') then true else false
+        @animate = if $('#instant_draw_chk').is(':checked') then false else true
+        # console.log "Overlay is #{@overlay}"
         # this = new Game(@context, @celllX, @cellsY, @string, @xoffset, @yoffset)
         @redrawContext()
         @save(true)

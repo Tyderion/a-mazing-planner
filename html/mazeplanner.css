@@ -12,6 +12,10 @@
 
 
 }
+#settings > input {
+  float: left;
+  clear: none;
+}
 
 #settings > div, #settings > div > div, #settings > label, #settings > button {
   float: left;
