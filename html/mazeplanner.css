@@ -54,3 +54,8 @@ label {
   clear: both;
 }
 
+#dns {
+  float: left;
+  clear: both;
+}
+

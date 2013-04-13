@@ -562,7 +562,7 @@ class window.Game
     $('#grid_height').get(0).value = @cellsY
     $('#current_grid_height').html @cellsY+1
     $('#grid_width').get(0).value = @cellsX
-    $('#current_grid_height').html @cellsX+1
+    $('#current_grid_width').html @cellsX+1
     $('#overlay_chk').attr('checked', @overlay)
     $('#instant_draw_chk').attr('checked', not @animate)
     $('#tower_height').get(0).value = @obstacle_height

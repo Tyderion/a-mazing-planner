@@ -4,7 +4,7 @@
   top: 100px;
   left: 100px;
   width: 300px;
-  height: 530px;
+  height: 600px;
 
   border: 2px solid lightGray;
   border-radius: 5px;
@@ -13,21 +13,33 @@
 
 }
 
+
+.note {
+    float: right;
+    padding-left: 5px;
+    width: 35px;
+    margin-top: 5px;
+}
+
+
 #settings > input {
   float: left;
   clear: none;
+  margin: 5px;
+  margin-top: 11px;
+  padding: 2px;
 }
 
-
-#settings > div, #settings > div > div, #settings > label, #settings > button, #settings > span {
+#settings > div, #settings > div, #settings > button {
   float: left;
   clear: both;
+  width: 100%;
 }
 
-#settings > div >input[type="range"] {
+#settings > div > input[type="range"] {
   float: right;
-  clear: top;
-  margin-right: 20%;
+  margin-right: 5px;
+  margin-top: 5px;
 }
 
 #keyboard {
@@ -35,5 +47,15 @@
   clear: both;
 }
 
+label {
+  padding: 2px;
+  margin: 5px;
+  float: left;
+  clear: both;
+}
 
+#dns {
+  float: left;
+  clear: both;
+}
 
