@@ -1,37 +1,32 @@
-<!DOCTYPE html>
 <html>
 <head>
 	<title>Maze Planner for Gem TD (Starcraft Edition)</title>
 	<meta charset="utf-8" />
-	<link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/mazeplanner.css">
+	<link rel="stylesheet" href="mazeplanner.css">
+	<!-- // <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> -->
+  <script src="../vendor/jquery.min.js" ></script>
+  <script src="../vendor/jcanvas.min.js" ></script>
+  <script src="../vendor/jquery.mousewheel.js" ></script>
+  <script src="../vendor/jquery.cookie.js"></script>
+  <script src="../vendor/html5slider.js"></script>
+  <script src="../vendor/binaryheap.js"></script>
+  <script src="../vendor/graph.js"></script>
+  <script src="../vendor/astar.js"></script>
+  <script src="../vendor/luminosity.js"></script>
 
-
-
-	<script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.min.js"></script>
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.mousewheel.js" ></script>
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.cookie.js" ></script>
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jcanvas.min.js"></script>
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/binaryheap.js"></script>
-  <!-- // <script src="vendor/binaryheap.js"></script> -->
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/graph.js"></script>
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/html5slider.js"></script>
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/astar.js"></script>
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/luminosity.js"></script>
-
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.ui.draggable.js" ></script>
-
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.alerts.js" ></script>
-  <link href="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.alerts.css" rel="stylesheet" type="text/css" media="screen" />
+    <script src="../vendor/jquery.ui.draggable.js" type="text/javascript"></script>
+  <script src="../vendor/jquery.alerts.js" type="text/javascript"></script>
+  <link href="../vendor/jquery.alerts.css" rel="stylesheet" type="text/css" media="screen" />
 
 
   <!-- Compiling Coffeescript in browser, reverse order ^^ -->
   <!-- // <script src="http://jashkenas.github.io/coffee-script/extras/coffee-script.js"></script> -->
   <!-- // <script src="mazeplanner.coffee" type="text/coffeescript" async></script> -->
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/html/mazeplanner.js"   async></script>
-  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/html/start.js" ></script>
+  <script src="mazeplanner.js"  type="text/javascript" async></script>
+  <script src="start.js" type="text/javascript"></script>
 </head>
 <body>
-<button id="start">Start the Game</button>
+<!-- <button id="start">Start the Game</button> -->
 <canvas id="drawing" ></canvas>
 <p>Your browser doesn't support canvas.</p>
 
@@ -39,22 +34,38 @@
   <div>These Are the Settings</div>
   <button id="resetMaze">Reset the Maze</button>
   <div id="heightSettings">
-    <label for="height" id="height">Height</label>
-    <input name="height" id="heightslider" type="range" value="10" />
-    <div class="note">Current value: <span id="currentheight">10</span></div>
+    <label for="height" id="height">Grid Height</label>
+    <input name="height" id="grid_height" type="range" value="3" min="1", max="500" />
+    <div class="note"><span id="current_grid_height">3</span></div>
   </div>
   <div id="widthSettings">
-  <label for="width" id="width">width</label>
-  <input name="width" id="widthslider" type="range"  value="10"/>
+  <label for="width" id="width">Grid Width</label>
+  <input name="width" id="grid_width" type="range"  value="3" min="1", max="500"/>
 
-    <div class="note">Current value: <span id="currentwidth">10</span></div>
-</div>
-<label for="overlaycheckbox" id="overlay_chk_name">Overlay?</label>
+    <div class="note"> <span id="current_grid_width">3</span></div>
+  </div>
+<!--   <label for="overlaycolor" id="overlay_clr_name">Overlay Color</label>
+  <input name="overlaycolor" type="color" id="overlay_clr" />
+ -->
+  <label for="overlaycheckbox" id="overlay_chk_name">Overlay?</label>
   <input name="overlaycheckbox" type="checkbox" id="overlay_chk" />
-  <label for="instant_draw_checkbox" id="instant_draw_chk_name">Draw path instantl?</label>
+  <label for="instant_draw_checkbox" id="instant_draw_chk_name">Draw path instantly?</label>
   <input name="instant_draw_checkbox" type="checkbox" id="instant_draw_chk" />
-  <button id="save">Save Settings</button>
 
+  <label for="hide_cursor_checkbox" id="hide_cursor_chk_name">Hide cursor over the Grid?</label>
+  <input name="hide_cursor_checkbox" type="checkbox" id="hide_cursor_chk" />
+
+  <div id="towersize">
+    <label for="tower_height">Tower Height</label>
+    <input type="range" name="tower_height" id="tower_height" value="2" min="1", max="5" />
+    <div class="note"><span id="current_tower_height">2</span></div>
+    <label for="tower_width">Tower Width</label>
+    <input type="range" name="tower_width" id="tower_width" value="2" min="1", max="5" />
+    <div class="note"><span id="current_tower_width">2</span></div>
+  </div>
+
+
+  <button id="save">Save Settings</button>
 
   <ul id="keyboard">
     <li>c: Calculate the Path</li>
@@ -68,7 +79,8 @@
     <li>s: Show the string representation of the current maze</li>
     <li>l: load a maze</li>
   </ul>
-  <span> I'm using <a href="https://freedns.afraid.org/">FreeDNS</a> </span>
+  <span id="dns"> I'm using <a href="https://freedns.afraid.org/">FreeDNS</a> </span>
 </div>
+
  </body>
 </html>
