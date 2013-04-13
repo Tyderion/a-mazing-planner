@@ -23,7 +23,7 @@ $ ->
         params[tmparr[0]] = tmparr[1]
         i++
 
-      console.log params
+      # console.log params
       # width = window.innerWidth
       # height = window.innerHeight
 
@@ -42,6 +42,8 @@ $ ->
 
       string = ""
       string = params.string if params.string
+      # console.log "String is #{string}"
+
       game = new  window.Game(context,$('#heightslider').get(0).value,$('#widthslider').get(0).value, string)
 
 

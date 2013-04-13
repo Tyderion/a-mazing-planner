@@ -74,7 +74,7 @@ class Overlay
     if fake
       # x = Math.floor( Math.max(e.clientX-10-xoffset,0) / window.gridsize)
       # y = Math.floor( Math.max(e.clientY-10-yoffset,0) / window.gridsize)
-      # # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{grid[x][y].type}"
+      # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{grid[x][y].type}"
       size = 2 unless size
       fake = new Obstacle(x,y,size, size,4)
       if @x != x or @y != y
@@ -124,6 +124,7 @@ class window.Game
 
     @hasmoved
     @cookiename = "maze"
+    @cookieoptions = { path: '/' }
     @path = []
 
     @redrawn = false
@@ -150,23 +151,25 @@ class window.Game
     grid = @grid
     @cellsX = width
     @cellsY = height
+    # console.log "Grid dimensions: #{grid.length} x #{grid[0].length}"
     @grid = for row in [0..@cellsX]
         for col in [0..@cellsY]
           if grid[row]?[col] is undefined
              new Obstacle(row, col, 1,1)
           else
-            @obstacle_width = grid[row][col].width
-            @obstacle_height = grid[row][col].height
-            if col+@obstacle_height > @cellsY or row+@obstacle_width > @cellsX
+            width = grid[row][col].width
+            height = grid[row][col].height
+            # console.log "#{col}+#{height} > #{@cellsY} or #{row}+#{width} > #{@cellsX}"
+            if col+height-1 > @cellsY or row+width-1 > @cellsX
               new Obstacle(row, col, 1,1)
             else
-              new Obstacle(row, col, @obstacle_width ,  @obstacle_height, grid[row][col].type, grid[row][col].num)
+              new Obstacle(row, col, width ,  height, grid[row][col].type, grid[row][col].num)
 
 
   reset: ->
     jConfirm "Do you really want to reset the Maze?", "Confirmation Dialog", (r) =>
       if r
-        $.removeCookie @cookiename
+        $.removeCookie @cookiename#, @cookieoptions
         @grid = for row in [0..@cellsX]
           for col in [0..@cellsY]
             new Obstacle(row, col, 1,1,0)
@@ -180,15 +183,19 @@ class window.Game
     if override or @dosave
       @removePath()
       @createString()
-      $.cookie @cookiename, @string
+      $.cookie @cookiename, @string, @cookieoptions
 
   load: (string)->
     @string = string
+
+    # console.log "String is (loading): #{@string}"
     if @string
       @readString()
     else
       jAlert "Press 'o' to open the options menu", "Alert Dialog"
+
     @createString()
+    # console.log "String is: #{@string}"
     @redrawContext()
     # @debug()
 
@@ -216,9 +223,8 @@ class window.Game
             index++
           else
             [x, y, width, height, type,num] = attrs
-
+            # console.log "Creating obstacle: #{x}, #{y}, #{width}, #{height}, #{type},#{num}"
             if type is 3
-              # console.log "Creating obstacle: #{x}, #{y}, #{width}, #{height}, #{type},#{num}"
               @path[num] = [x,y]
             @grid[x][y] = new Obstacle(x,y, width, height, type, num)
       # console.log "Parsed #{numobstacles} Obstacles and #{numblocked} Blocked cells"
@@ -226,13 +232,15 @@ class window.Game
 
   createString: ->
     @string = "#{@xoffset},#{@yoffset},#{@cellsX},#{@cellsY},#{window.gridsize};"
-    console.log "Saving offset: #{@string}"
+    # console.log "Saving offset: #{@string}"
     for i in [0..@cellsX]
       for j in [0..@cellsY]
         ele = @grid[i][j]
+
+        # console.log "Tower-Type: #{ele.type}"
         # If it is a tower, save it
         if (ele.type >= 1)
-          # cellx, celly, width, height, type (just here to be future proof)
+          # cellx, celly, width, height, type
           num = ""
           if ele.type == 3
             index = 0
@@ -241,22 +249,25 @@ class window.Game
               if coords[0] == i and coords[1] == j
                 num = ",#{index}"
               index++
-          #   console.log "Searching: [#{i},#{j}] in the path"
-          #   console.log "Path number: #{num}"
+            # console.log "Searching: [#{i},#{j}] in the path"
+            # console.log "Path number: #{num}"
           # console.log "Number is: #{num}!"
+          # console.log "Saving element: #{i},#{j},#{ele.width},#{ele.height},#{ele.type}#{num};"
           @string += "#{i},#{j},#{ele.width},#{ele.height},#{ele.type}#{num};"
-    # console.log @string
+    # console.log "Saved all elements in string: #{@string}"
 
   debug: ->
     string = ""
-    for i in [0..@cellsX]
-      for j in [0..@cellsY]
-        string = "#{string} #{@grid[j][i].type}"
-      string = "#{string} \n"
-    string = "#{string} \n\n"
-    console.log string
-    @createString()
-    console.log @string.split /;/
+    for i in [0..@grid[0].length-1]
+      for j in [0..@grid.length-1]
+        type  = @grid[j][i].type
+        if type
+          string = "#{string}#{if type > 10 then ' ' else '  '}#{type}"
+      string = "#{string}\n"
+    string = "#{string}\n\n"
+    # console.log string
+    # @createString()
+    # console.log @string.split /;/
 
   redrawContext:  =>
     $("canvas").clearCanvas()
@@ -283,7 +294,7 @@ class window.Game
     if current is 1
       return true
     # If the current is empty, test if there is space for a tower
-    else if current is 0
+    else if current is 0 or current is 3
       val = true
       for i in [0..@obstacle_height-1]
         for j in [0..@obstacle_width-1]
@@ -298,7 +309,7 @@ class window.Game
     # console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
 
   click: (event) ->
-    console.log event
+    # console.log event
     # console.log "@rec_width >= event.clientX: #{@rec_width} >= #{event.clientY}"
     inx = event.clientX in [@xoffset..@rec_width+@xoffset]
     iny = event.clientY in [@yoffset..@rec_height+@yoffset]
@@ -327,16 +338,25 @@ class window.Game
           newval = 3
           @obstacle_height = @obstacle_width = 1
           @path.push [x,y]
+        else if event.altKey
+          @obstacle_height = @obstacle_width = 3
         else
           @obstacle_height = @obstacle_width = 2
+          # console.log "Width is: #{@obstacle_width}"
+
+        ele = @grid[x][y]
+        # console.log ele
+        # Unblock stuff that tower blocked
+        if ele.width > @obstacle_width or ele.height > @obstacle_height # ele.type is not 0 and event.shiftKey
+         for i in [0..ele.height-1]
+          for j in [0..ele.width-1]
+              @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
 
         if @checkValidity(x,y)
           @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval, if newval is 3 then @path.length-1 else undefined )
           for i in [0..@obstacle_height-1]
             for j in [0..@obstacle_width-1]
               unless i is 0 and j is 0
-                # Swap 5 and 0
-                # console.log "Swapping: #{@grid[x+j][y+i].type}"
                 @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
           # console.log @grid[x][y]
       # @debug()
@@ -377,14 +397,24 @@ class window.Game
       index_start = 0
       result = []
       while (index_start < @path.length-1)
+        _result = []
         start = graph.nodes[@path[index_start][0]][@path[index_start][1]]
         end = graph.nodes[@path[index_start+1][0]][@path[index_start+1][1]]
         # console.log "Calculating path from #{index_start} to #{index_start+1}"§
-        result.push node for node in  astar.search(graph.nodes, start, end)
+        _result = astar.search(graph.nodes, start, end)
+        distance = (Math.abs(start.x-end.x)+Math.abs(start.y-end.y))
+        # console.log "Iteration: #{index_start} Result length: #{_result.length} and distance is : #{distance}"
+        if _result.length < 1 and distance > 1
+          # console.log "index is #{index_start} and we're stopping the calculation"
+          break
+        else
+          result.push node for node in _result
         index_start++
 
+
+      # if result.length > 0
+        # result.push(graph.nodes[@path[@path.length-1][0]][@path[@path.length-1][1]])
       result.unshift(graph.nodes[@path[0][0]][@path[0][1]])
-      result.push(graph.nodes[@path[@path.length-1][0]][@path[@path.length-1][1]])
 
       jAlert "Path Calculated", "Alert Dialog"
 
@@ -448,7 +478,7 @@ class window.Game
       else
         @animatePath(index+1, result)
 
-    , window.gridsize/10
+    , 3#window.gridsize/10
 
 
 
@@ -515,7 +545,6 @@ class window.Game
         x2: @rec_width+@xoffset, y2: j+@yoffset
       j += @height/vertsteps
 
-    gridsize = window.gridsize
     for x in [0..@cellsX]
       for y in [0..@cellsY]
         @grid[x][y].draw(@xoffset, @yoffset)
@@ -526,6 +555,8 @@ class window.Game
     $('#currentheight').html @cellsY+1
     $('#widthslider').get(0).value = @cellsX
     $('#currentwidth').html @cellsX+1
+    $('#overlay_chk').attr('checked', @overlay)
+    $('#instant_draw_chk').attr('checked', not @animate)
 
 
   createOverlay: (e) ->
@@ -534,7 +565,7 @@ class window.Game
     if inx and iny
       x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
       y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
-      # # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
+      # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
       size = if e.shiftKey then 1 else 2
       fake = new Obstacle(x,y,size, size,4)
       @redrawContext() if ex != x or ey != y
@@ -553,7 +584,10 @@ class window.Game
     $("html").on
       mousemove: (e) =>
         if @overlay
-          @obstacle_height = @obstacle_width = 1 if e.shiftKey
+          if e.shiftKey
+            @obstacle_height = @obstacle_width = 1
+          else if e.altKey
+            @obstacle_height = @obstacle_width = 3
           inx = e.clientX in [@xoffset..@rec_width+@xoffset]
           iny = e.clientY in [@yoffset..@rec_height+@yoffset]
           if inx and iny
@@ -611,7 +645,7 @@ class window.Game
         @save()
         return null
       keypress: (e) =>
-        console.log e
+        # console.log e
         if e.keyCode is 27 # Escape
           @toggleMenu()
         if e.shiftKey
@@ -655,10 +689,16 @@ class window.Game
     , "[id*=slider]"
     $('#save').on
       click: =>
+        # console.log "Clicked on save"
+        @debug()
         @adjustSize(parseInt($("#heightslider").get(0).value), parseInt($("#widthslider").get(0).value))
+        # console.log "after adjustsize "
+        @debug()
         @overlay = if $('#overlay_chk').is(':checked') then true else false
         @animate = if $('#instant_draw_chk').is(':checked') then false else true
         # console.log "Overlay is #{@overlay}"
         # this = new Game(@context, @celllX, @cellsY, @string, @xoffset, @yoffset)
+
         @redrawContext()
+
         @save(true)
