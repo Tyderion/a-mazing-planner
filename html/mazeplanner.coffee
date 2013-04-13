@@ -52,8 +52,8 @@ class Obstacle
           fillStyle: "#9cf"
           strokeStyle: "#25a"
           strokeWidth: 2
-          x: x+width/2
-          y: y+height/2
+          x: x+window.gridsize/2
+          y: y+window.gridsize/2
           font: "#{window.gridsize/3*2}pt Verdana, sans-serif"
           text: "#{@num}"
 
@@ -70,12 +70,12 @@ class Overlay
 
 
 
-  draw: (x,y ,xoffset, yoffset, rec_width, rec_height, fake, width=2, height=2) ->
+  draw: (x,y ,xoffset, yoffset, rec_width, rec_height, fake, width, height, num) ->
     if fake
       # x = Math.floor( Math.max(e.clientX-10-xoffset,0) / window.gridsize)
       # y = Math.floor( Math.max(e.clientY-10-yoffset,0) / window.gridsize)
       # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{grid[x][y].type}"
-      fake = new Obstacle(x,y,width, height,4)
+      fake = new Obstacle(x,y,width, height,4, num)
       if @x != x or @y != y
         if @timout
           clearTimeout(@timeout)
@@ -611,7 +611,13 @@ class window.Game
               $("#drawing").css('cursor', 'default')
 
             if @checkValidity(x,y)
-              @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true, @obstacle_width, @obstacle_height )
+              if e.shiftKey
+                num = @grid[x][y].num
+                unless num
+                  num = path.length
+
+
+              @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true, @obstacle_width, @obstacle_height, num )
           else
             @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, false, @obstacle_width, @obstacle_height)
             $("#drawing").css('cursor', 'default')
