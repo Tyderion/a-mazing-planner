@@ -116,6 +116,8 @@ class window.Game
     @xoffset = 100#xoffset
     @yoffset = 100#yoffset
 
+    @hidecursor = true
+
     @overlay = true
     @animate = true
 
@@ -569,6 +571,7 @@ class window.Game
     $('#current_tower_height').html @obstacle_height
     $('#tower_width').get(0).value = @obstacle_width
     $('#current_tower_width').html @obstacle_width
+    $('#hide_cursor_chk').attr('checked', @hidecursor)
 
   getConfig: ->
       @obstacle_height = parseInt $('#tower_height').get('0').value
@@ -589,16 +592,22 @@ class window.Game
           inx = e.clientX in [@xoffset..@rec_width+@xoffset]
           iny = e.clientY in [@yoffset..@rec_height+@yoffset]
           if inx and iny
+            if @hidecursor
+              $("#drawing").css('cursor', "none")
+            else
+              $("#drawing").css('cursor', 'default')
             x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
             y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
             if @checkValidity(x,y)
               @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true, @obstacle_width, @obstacle_height )
           else
             @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, false, @obstacle_width, @obstacle_height)
+            $("#drawing").css('cursor', 'default')
           @getConfig()
 
 
         if @mousedown
+          $("#drawing").css('cursor', 'pointer')
           # Calculate the x/y difference
           xdiff = @mousedown.clientX - e.clientX
           ydiff = @mousedown.clientY - e.clientY
@@ -693,6 +702,7 @@ class window.Game
         @debug()
         @overlay = if $('#overlay_chk').is(':checked') then true else false
         @animate = if $('#instant_draw_chk').is(':checked') then false else true
+        @hidecursor = if $('#hide_cursor_chk').is(':checked') then true else false
         # console.log "Overlay is #{@overlay}"
         # this = new Game(@context, @celllX, @cellsY, @string, @xoffset, @yoffset)
 
