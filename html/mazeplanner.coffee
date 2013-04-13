@@ -119,7 +119,7 @@ class window.Game
     @hidecursor = true
 
     @overlay = true
-    @animate = true
+    @animate = false
 
     @lastdown = 0
 
@@ -435,13 +435,15 @@ class window.Game
         # result.push(graph.nodes[@path[@path.length-1][0]][@path[@path.length-1][1]])
       result.unshift(graph.nodes[@path[0][0]][@path[0][1]])
 
-      jAlert "Path Calculated", "Alert Dialog"
+
 
       # @animatePath(0, result)
       if @animate
+        #jAlert "Path Calculated", "Alert Dialog"
         @animatePath(0, result)
       else
         @instantPath(result)
+        jAlert "Your Maze is #{result.length} Tiles long.", "Alert Dialog"
 
 
 
