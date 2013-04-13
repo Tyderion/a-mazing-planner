@@ -1,11 +1,6 @@
 # Planner for a maze
 
-This will be a planner for a popular Starcraft II TD (also WC3) called Gem TD.
-
-First tries with HTML5-Canvas.
+This is a simple maze planner for games like the Gem TD in starcraft.
 
 
-Ideas:
-
-7 Bases around which can be mazed.
-User can create walls by clicking, longest maze ist the best :)
+visit mazeplanner.is-a-geek.ch for a working demo
