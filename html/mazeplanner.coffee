@@ -227,7 +227,11 @@ class window.Game
             # console.log "Creating obstacle: #{x}, #{y}, #{width}, #{height}, #{type},#{num}"
             if type is 3
               @path[num] = [x,y]
-            @grid[x][y] = new Obstacle(x,y, width, height, type, num)
+            if type is 1
+              for i in [0..height-1]
+                for j in [0..width-1]
+                  @grid[x+j][y+i] = new Obstacle(x+j,y+i, width, height, @constructor.BLOCKED, num)
+            @grid[x][y] = new Obstacle(x,y, width, height, type, num) unless type is @constructor.BLOCKED
       # console.log "Parsed #{numobstacles} Obstacles and #{numblocked} Blocked cells"
       # @debug()
 
@@ -253,8 +257,9 @@ class window.Game
             # console.log "Searching: [#{i},#{j}] in the path"
             # console.log "Path number: #{num}"
           # console.log "Number is: #{num}!"
-          # console.log "Saving element: #{i},#{j},#{ele.width},#{ele.height},#{ele.type}#{num};"
-          @string += "#{i},#{j},#{ele.width},#{ele.height},#{ele.type}#{num};"
+          unless ele.type is @constructor.BLOCKED
+            # console.log "Saving element: #{i},#{j},#{ele.width},#{ele.height},#{ele.type}#{num};"
+            @string += "#{i},#{j},#{ele.width},#{ele.height},#{ele.type}#{num};"
     # console.log "Saved all elements in string: #{@string}"
 
   debug: ->
