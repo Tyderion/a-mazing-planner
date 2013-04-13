@@ -58,6 +58,36 @@ class Obstacle
           text: "#{@num}"
 
 
+
+class Overlay
+
+  constructor: (game) ->
+    @x = 0
+    @y = 0
+    @game = game
+    @redraw = false
+
+
+
+  draw: (x,y ,xoffset, yoffset, rec_width, rec_height, fake, size) ->
+    if fake
+      # x = Math.floor( Math.max(e.clientX-10-xoffset,0) / window.gridsize)
+      # y = Math.floor( Math.max(e.clientY-10-yoffset,0) / window.gridsize)
+      # # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{grid[x][y].type}"
+      size = 2 unless size
+      fake = new Obstacle(x,y,size, size,4)
+      if @x != x or @y != y
+        @game.redrawContext()
+      fake.draw(xoffset, yoffset)
+      @x = x
+      @y = y
+      @redraw = true
+    else
+      if @redraw
+        @game.redrawContext()
+      @redraw = false
+
+
 class window.Game
   @game
   @BLOCKED = 99
@@ -91,6 +121,8 @@ class window.Game
     @path = []
 
     @redrawn = false
+
+    @theOverlay = new Overlay(this)
 
 
     @checkDims()
@@ -486,29 +518,76 @@ class window.Game
     $('#widthslider').get(0).value = @cellsX
     $('#currentwidth').html @cellsX+1
 
+
+  createOverlay: (e) ->
+    inx = e.clientX in [@xoffset..@rec_width+@xoffset]
+    iny = e.clientY in [@yoffset..@rec_height+@yoffset]
+    if inx and iny
+      x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
+      y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
+      # # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
+      size = if e.shiftKey then 1 else 2
+      fake = new Obstacle(x,y,size, size,4)
+      @redrawContext() if ex != x or ey != y
+      fake.draw(@xoffset, @yoffset)
+      ex = x
+      ey = y
+      @redraw = true
+    else
+      if @redraw
+        @redrawContext()
+      @redraw = false
+
+  drawOverlay: (e) ->
+    inx = e.clientX in [@xoffset..@rec_width+@xoffset]
+    iny = e.clientY in [@yoffset..@rec_height+@yoffset]
+    if inx and iny
+      x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
+      y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
+      # # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
+      size = if e.shiftKey then 1 else 2
+      fake = new Obstacle(x,y,size, size,4)
+      if ex != x or ey != y
+        @redrawContext()
+        console.log "Drawing"
+      fake.draw(@xoffset, @yoffset)
+      ex = x
+      ey = y
+      @redraw = true
+    else
+      if @redraw
+        @redrawContext()
+      @redraw = false
+
   createhandlers: ->
-    ex = 0
-    ey = 0
+
     $("html").on
       mousemove: (e) =>
         if @overlay
-          inx = e.clientX in [@xoffset..@rec_width+@xoffset]
-          iny = e.clientY in [@yoffset..@rec_height+@yoffset]
-          if inx and iny
-            x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
-            y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
-            # # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
-            size = if e.shiftKey then 1 else 2
-            fake = new Obstacle(x,y,size, size,4)
-            @redrawContext() if ex != x or ey != y
-            fake.draw(@xoffset, @yoffset)
-            ex = x
-            ey = y
-            @redraw = true
+          if e.shiftKey
+            @obstacle_height = @obstacle_width = 1
+            inx = e.clientX in [@xoffset..@rec_width+@xoffset]
+            iny = e.clientY in [@yoffset..@rec_height+@yoffset]
+            if inx and iny
+              x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
+              y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
+              if @checkValidity(x,y)
+                @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true, 1 )
+            else
+              @theOverlay.draw(ex,y, @xoffset, @yoffset, @rec_width, @rec_height, false, 1)
+            @obstacle_height = @obstacle_width = 2
           else
-            if @redraw
-              @redrawContext()
-            @redraw = false
+            inx = e.clientX in [@xoffset..@rec_width+@xoffset]
+            iny = e.clientY in [@yoffset..@rec_height+@yoffset]
+            if inx and iny
+              x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
+              y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
+              if @checkValidity(x,y)
+                @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true)
+            else
+              @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, false)
+
+
         if @mousedown
           # Calculate the x/y difference
           xdiff = @mousedown.clientX - e.clientX
@@ -554,6 +633,7 @@ class window.Game
         @save()
         return null
       keypress: (e) =>
+        console.log e
         if e.keyCode is 27 # Escape
           @toggleMenu()
         if e.shiftKey
