@@ -538,54 +538,23 @@ class window.Game
         @redrawContext()
       @redraw = false
 
-  drawOverlay: (e) ->
-    inx = e.clientX in [@xoffset..@rec_width+@xoffset]
-    iny = e.clientY in [@yoffset..@rec_height+@yoffset]
-    if inx and iny
-      x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
-      y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
-      # # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
-      size = if e.shiftKey then 1 else 2
-      fake = new Obstacle(x,y,size, size,4)
-      if ex != x or ey != y
-        @redrawContext()
-        console.log "Drawing"
-      fake.draw(@xoffset, @yoffset)
-      ex = x
-      ey = y
-      @redraw = true
-    else
-      if @redraw
-        @redrawContext()
-      @redraw = false
 
   createhandlers: ->
 
     $("html").on
       mousemove: (e) =>
         if @overlay
-          if e.shiftKey
-            @obstacle_height = @obstacle_width = 1
-            inx = e.clientX in [@xoffset..@rec_width+@xoffset]
-            iny = e.clientY in [@yoffset..@rec_height+@yoffset]
-            if inx and iny
-              x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
-              y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
-              if @checkValidity(x,y)
-                @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true, 1 )
-            else
-              @theOverlay.draw(ex,y, @xoffset, @yoffset, @rec_width, @rec_height, false, 1)
-            @obstacle_height = @obstacle_width = 2
+          @obstacle_height = @obstacle_width = 1 if e.shiftKey
+          inx = e.clientX in [@xoffset..@rec_width+@xoffset]
+          iny = e.clientY in [@yoffset..@rec_height+@yoffset]
+          if inx and iny
+            x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
+            y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
+            if @checkValidity(x,y)
+              @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true, @obstacle_width )
           else
-            inx = e.clientX in [@xoffset..@rec_width+@xoffset]
-            iny = e.clientY in [@yoffset..@rec_height+@yoffset]
-            if inx and iny
-              x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
-              y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
-              if @checkValidity(x,y)
-                @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true)
-            else
-              @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, false)
+            @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, false, @obstacle_width )
+          @obstacle_height = @obstacle_width = 2
 
 
         if @mousedown
