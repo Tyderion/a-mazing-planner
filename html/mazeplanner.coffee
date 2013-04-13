@@ -123,7 +123,7 @@ class window.Game
 
     @lastdown = 0
 
-    @hasmoved
+    @hasmoved = []
     @cookiename = "maze"
     @cookieoptions = { path: '/' }
     @path = []
@@ -312,6 +312,7 @@ class window.Game
     # console.log "Coordinate (#{x},#{y}) is #{current} and is it valid to switch? #{@test[index]}"
 
   click: (event) ->
+    #TODO: Streamline this function
     # console.log event
     # console.log "@rec_width >= event.clientX: #{@rec_width} >= #{event.clientY}"
     inx = event.clientX in [@xoffset..@rec_width+@xoffset]
@@ -361,13 +362,16 @@ class window.Game
             # console.log "resetting: #{x+j},#{y+i} from #{@grid[x+j][y+i].type} to #{@grid[x+j][y+i].type*-1 + @constructor.BLOCKED}"
 
         # console.log "obstacle size:  #{@obstacle_width}x#{@obstacle_height}"
-        unless current is 1
-          if @checkValidity(x,y)
-            @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval, if newval is 3 then @path.length-1 else undefined )
-            for i in [0..@obstacle_height-1]
-              for j in [0..@obstacle_width-1]
-                unless i is 0 and j is 0
-                  @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
+        if @checkValidity(x,y)
+          @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval, if newval is 3 then @path.length-1 else undefined )
+          # unless current is 1
+          for i in [0..@obstacle_height-1]
+            for j in [0..@obstacle_width-1]
+              unless i is 0 and j is 0
+                if current is 1
+                  @grid[x+j][y+i].type = 0
+                else
+                  @grid[x+j][y+i].type = @constructor.BLOCKED
           # console.log @grid[x][y]
       # @debug()
       @redrawContext()
@@ -582,8 +586,10 @@ class window.Game
 
   createhandlers: ->
 
-    $("html").on
+    $("#drawing").on
       mousemove: (e) =>
+        x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
+        y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
         if @overlay
           if e.shiftKey
             @obstacle_height = @obstacle_width = 1
@@ -596,8 +602,7 @@ class window.Game
               $("#drawing").css('cursor', "none")
             else
               $("#drawing").css('cursor', 'default')
-            x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
-            y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
+
             if @checkValidity(x,y)
               @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true, @obstacle_width, @obstacle_height )
           else
@@ -623,7 +628,7 @@ class window.Game
             @xoffset -= xdiff
             @yoffset -= ydiff
             @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
-          @hasmoved = true
+          @hasmoved = [x,y]
           # Save new position
           @mousedown = e
       mousedown: (e) =>
@@ -634,10 +639,13 @@ class window.Game
         # xdiff = Math.abs @hasmoved.clientX - e.clientX
         # ydiff = Math.abs @hasmoved.clientY - e.clientY
         # console.log "Move-distance: #{xdiff},#{ydiff}"
-        unless @hasmoved
+
+        x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
+        y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
+        unless @hasmoved.length == 2 and x is @hasmoved[0] and y is @hasmoved[1]
           if e.button == 0
             @click(e)
-        @hasmoved = false
+        @hasmoved = []
       resize: (e) =>
         # Use Timeout....
         @timeout = window.setTimeout(@redrawContext, 20) if @timeout <= 0
@@ -651,30 +659,6 @@ class window.Game
       beforeunload: =>
         @save()
         return null
-      keypress: (e) =>
-        # console.log e
-        if e.keyCode is 27 # Escape
-          @toggleMenu()
-        if e.shiftKey
-          switch String.fromCharCode(e.charCode)
-            when "C"
-              @removePath()
-        unless e.metaKey or e.shiftKey or e.altKey or e.ctrlKey
-          switch String.fromCharCode(e.charCode)
-            when "o"
-              @toggleMenu()
-            when "r"
-              @reset()
-            when "c"
-              @calculatePath()
-            when "l"
-              jPrompt "Paste the save string", "", "Prompt Dialog", (r) =>
-                @load(r)
-                @redrawContext()
-            when "s"
-              jPrompt "Copy this string and give it to a friend who wants to see your maze", @string, "Prompt Dialog", (r) ->
-            when "u"
-              jPrompt "This is a Link to your Maze", "http://mazeplanner.is-a-geek.ch?string=#{@string}", "Prompt Dialog", (r) ->
 
       load: =>
         @load()
@@ -684,6 +668,9 @@ class window.Game
         @reset()
         return false
     $('#settings').on
+      click: (e) =>
+        e.stopPropagation()
+    $('#popup_container').on
       click: (e) =>
         e.stopPropagation()
     $('#settings').on
@@ -709,3 +696,28 @@ class window.Game
         @redrawContext()
 
         @save(true)
+    $('html').on
+       keypress: (e) =>
+        # console.log e
+        if e.keyCode is 27 # Escape
+          @toggleMenu()
+        if e.shiftKey
+          switch String.fromCharCode(e.charCode)
+            when "C"
+              @removePath()
+        unless e.metaKey or e.shiftKey or e.altKey or e.ctrlKey
+          switch String.fromCharCode(e.charCode)
+            when "o"
+              @toggleMenu()
+            when "r"
+              @reset()
+            when "c"
+              @calculatePath()
+            when "l"
+              jPrompt "Paste the save string", "", "Prompt Dialog", (r) =>
+                @load(r)
+                @redrawContext()
+            when "s"
+              jPrompt "Copy this string and give it to a friend who wants to see your maze", @string, "Prompt Dialog", (r) ->
+            when "u"
+              jPrompt "This is a Link to your Maze", "http://mazeplanner.is-a-geek.ch?string=#{@string}", "Prompt Dialog", (r) ->
