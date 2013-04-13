@@ -66,6 +66,7 @@ class Overlay
     @y = 0
     @game = game
     @redraw = false
+    @timout = 0
 
 
 
@@ -77,14 +78,18 @@ class Overlay
       size = 2 unless size
       fake = new Obstacle(x,y,size, size,4)
       if @x != x or @y != y
-        @game.redrawContext()
+        if @timout
+          clearTimeout(@timeout)
+        @timout = setTimeout @game.redrawContext, 5
       fake.draw(xoffset, yoffset)
       @x = x
       @y = y
       @redraw = true
     else
       if @redraw
-        @game.redrawContext()
+        if @timout
+          clearTimeout(@timeout)
+        @timout = setTimeout @game.redrawContext, 5
       @redraw = false
 
 
