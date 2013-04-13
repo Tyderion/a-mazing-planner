@@ -258,11 +258,13 @@ class window.Game
 
   debug: ->
     string = ""
-    for i in [0..@cellsX]
-      for j in [0..@cellsY]
-        string = "#{string} #{@grid[j][i].type}"
-      string = "#{string} \n"
-    string = "#{string} \n\n"
+    for i in [0..@grid[0].length-1]
+      for j in [0..@grid.length-1]
+        type  = @grid[j][i].type
+        if type
+          string = "#{string}#{if type > 10 then ' ' else '  '}#{type}"
+      string = "#{string}\n"
+    string = "#{string}\n\n"
     # console.log string
     # @createString()
     # console.log @string.split /;/
@@ -292,7 +294,7 @@ class window.Game
     if current is 1
       return true
     # If the current is empty, test if there is space for a tower
-    else if current is 0
+    else if current is 0 or current is 3
       val = true
       for i in [0..@obstacle_height-1]
         for j in [0..@obstacle_width-1]
@@ -336,16 +338,25 @@ class window.Game
           newval = 3
           @obstacle_height = @obstacle_width = 1
           @path.push [x,y]
+        else if event.altKey
+          @obstacle_height = @obstacle_width = 3
         else
           @obstacle_height = @obstacle_width = 2
+          # console.log "Width is: #{@obstacle_width}"
+
+        ele = @grid[x][y]
+        # console.log ele
+        # Unblock stuff that tower blocked
+        if ele.width > @obstacle_width or ele.height > @obstacle_height # ele.type is not 0 and event.shiftKey
+         for i in [0..ele.height-1]
+          for j in [0..ele.width-1]
+              @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
 
         if @checkValidity(x,y)
           @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval, if newval is 3 then @path.length-1 else undefined )
           for i in [0..@obstacle_height-1]
             for j in [0..@obstacle_width-1]
               unless i is 0 and j is 0
-                # Swap 5 and 0
-                # console.log "Swapping: #{@grid[x+j][y+i].type}"
                 @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
           # console.log @grid[x][y]
       # @debug()
@@ -386,14 +397,24 @@ class window.Game
       index_start = 0
       result = []
       while (index_start < @path.length-1)
+        _result = []
         start = graph.nodes[@path[index_start][0]][@path[index_start][1]]
         end = graph.nodes[@path[index_start+1][0]][@path[index_start+1][1]]
         # console.log "Calculating path from #{index_start} to #{index_start+1}"§
-        result.push node for node in  astar.search(graph.nodes, start, end)
+        _result = astar.search(graph.nodes, start, end)
+        distance = (Math.abs(start.x-end.x)+Math.abs(start.y-end.y))
+        # console.log "Iteration: #{index_start} Result length: #{_result.length} and distance is : #{distance}"
+        if _result.length < 1 and distance > 1
+          # console.log "index is #{index_start} and we're stopping the calculation"
+          break
+        else
+          result.push node for node in _result
         index_start++
 
+
+      # if result.length > 0
+        # result.push(graph.nodes[@path[@path.length-1][0]][@path[@path.length-1][1]])
       result.unshift(graph.nodes[@path[0][0]][@path[0][1]])
-      result.push(graph.nodes[@path[@path.length-1][0]][@path[@path.length-1][1]])
 
       jAlert "Path Calculated", "Alert Dialog"
 
@@ -534,6 +555,8 @@ class window.Game
     $('#currentheight').html @cellsY+1
     $('#widthslider').get(0).value = @cellsX
     $('#currentwidth').html @cellsX+1
+    $('#overlay_chk').attr('checked', @overlay)
+    $('#instant_draw_chk').attr('checked', not @animate)
 
 
   createOverlay: (e) ->
@@ -561,7 +584,10 @@ class window.Game
     $("html").on
       mousemove: (e) =>
         if @overlay
-          @obstacle_height = @obstacle_width = 1 if e.shiftKey
+          if e.shiftKey
+            @obstacle_height = @obstacle_width = 1
+          else if e.altKey
+            @obstacle_height = @obstacle_width = 3
           inx = e.clientX in [@xoffset..@rec_width+@xoffset]
           iny = e.clientY in [@yoffset..@rec_height+@yoffset]
           if inx and iny
