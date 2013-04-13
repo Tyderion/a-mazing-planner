@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Maze Planner for Gem TD (Starcraft Edition)</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/mazeplanner.css">
+
+
+
+	<script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.min.js"></script>
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.mousewheel.js" ></script>
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.cookie.js" ></script>
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jcanvas.min.js"></script>
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/binaryheap.js"></script>
+  <!-- // <script src="vendor/binaryheap.js"></script> -->
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/graph.js"></script>
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/html5slider.js"></script>
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/astar.js"></script>
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/luminosity.js"></script>
+
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.ui.draggable.js" ></script>
+
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.alerts.js" ></script>
+  <link href="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/vendor/jquery.alerts.css" rel="stylesheet" type="text/css" media="screen" />
+
+
+  <!-- Compiling Coffeescript in browser, reverse order ^^ -->
+  <!-- // <script src="http://jashkenas.github.io/coffee-script/extras/coffee-script.js"></script> -->
+  <!-- // <script src="mazeplanner.coffee" type="text/coffeescript" async></script> -->
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/html/mazeplanner.js"   async></script>
+  <script src="https://dl.dropboxusercontent.com/u/4255285/mazeplanner/html/start.js" ></script>
+</head>
+<body>
+<button id="start">Start the Game</button>
+<canvas id="drawing" ></canvas>
+<p>Your browser doesn't support canvas.</p>
+
+<div id="settings">
+  <div>These Are the Settings</div>
+  <button id="resetMaze">Reset the Maze</button>
+  <div id="heightSettings">
+    <label for="height" id="height">Height</label>
+    <input name="height" id="heightslider" type="range" value="10" />
+    <div class="note">Current value: <span id="currentheight">10</span></div>
+  </div>
+  <div id="widthSettings"
+  <label for="width" id="width">width</label>
+  <input name="width" id="widthslider" type="range"  value="10"/>
+
+    <div class="note">Current value: <span id="currentwidth">10</span></div>
+</div>
+  <button id="save">Save Settings</button>
+
+
+  <ul id="keyboard">
+    <li>c: Calculate the Path</li>
+    <li>shift-c: Remove the drawn path</li>
+    <li>r: Reset the Maze</li>
+    <li>o: Open this Dialog</li>
+    <li>click: Add a 2x2 Tower</li>
+    <li>shift-click: Add a waypoint</li>
+    <li>click-drag: Drag the maze around</li>
+    <li>Scroll: Zoom the maze</li>
+    <li>s: Show the string representation of the current maze</li>
+    <li>l: load a maze</li>
+  </ul>
+  <span> I'm using <a href="https://freedns.afraid.org/">FreeDNS</a> </span>
+</div>
+ </body>
+</html>
