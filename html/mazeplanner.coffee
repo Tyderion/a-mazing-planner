@@ -70,13 +70,12 @@ class Overlay
 
 
 
-  draw: (x,y ,xoffset, yoffset, rec_width, rec_height, fake, size) ->
+  draw: (x,y ,xoffset, yoffset, rec_width, rec_height, fake, width=2, height=2) ->
     if fake
       # x = Math.floor( Math.max(e.clientX-10-xoffset,0) / window.gridsize)
       # y = Math.floor( Math.max(e.clientY-10-yoffset,0) / window.gridsize)
       # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{grid[x][y].type}"
-      size = 2 unless size
-      fake = new Obstacle(x,y,size, size,4)
+      fake = new Obstacle(x,y,width, height,4)
       if @x != x or @y != y
         if @timout
           clearTimeout(@timeout)
@@ -263,6 +262,8 @@ class window.Game
         type  = @grid[j][i].type
         if type
           string = "#{string}#{if type > 10 then ' ' else '  '}#{type}"
+        else
+          string = "#{string}  0"
       string = "#{string}\n"
     string = "#{string}\n\n"
     # console.log string
@@ -341,23 +342,30 @@ class window.Game
         else if event.altKey
           @obstacle_height = @obstacle_width = 3
         else
-          @obstacle_height = @obstacle_width = 2
+          @getConfig()
+
           # console.log "Width is: #{@obstacle_width}"
 
         ele = @grid[x][y]
         # console.log ele
         # Unblock stuff that tower blocked
-        if ele.width > @obstacle_width or ele.height > @obstacle_height # ele.type is not 0 and event.shiftKey
+        # console.log "element height: #{ele.height} and new height: #{@obstacle_height}"
+        if ele.width > @obstacle_width or ele.height > @obstacle_height
          for i in [0..ele.height-1]
           for j in [0..ele.width-1]
-              @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
+            # console.log "{i}{j} = #{i},#{j}"
+            # if i is 0 and j is 0######
+            @grid[x+j][y+i].type = 0
+            # console.log "resetting: #{x+j},#{y+i} from #{@grid[x+j][y+i].type} to #{@grid[x+j][y+i].type*-1 + @constructor.BLOCKED}"
 
-        if @checkValidity(x,y)
-          @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval, if newval is 3 then @path.length-1 else undefined )
-          for i in [0..@obstacle_height-1]
-            for j in [0..@obstacle_width-1]
-              unless i is 0 and j is 0
-                @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
+        # console.log "obstacle size:  #{@obstacle_width}x#{@obstacle_height}"
+        unless current is 1
+          if @checkValidity(x,y)
+            @grid[x][y] = new Obstacle(x,y,@obstacle_width, @obstacle_height, newval, if newval is 3 then @path.length-1 else undefined )
+            for i in [0..@obstacle_height-1]
+              for j in [0..@obstacle_width-1]
+                unless i is 0 and j is 0
+                  @grid[x+j][y+i].type = @grid[x+j][y+i].type*-1 + @constructor.BLOCKED
           # console.log @grid[x][y]
       # @debug()
       @redrawContext()
@@ -551,32 +559,22 @@ class window.Game
 
   toggleMenu: ->
     $('#settings').toggle()
-    $('#heightslider').get(0).value = @cellsY
-    $('#currentheight').html @cellsY+1
-    $('#widthslider').get(0).value = @cellsX
-    $('#currentwidth').html @cellsX+1
+    $('#grid_height').get(0).value = @cellsY
+    $('#current_grid_height').html @cellsY+1
+    $('#grid_width').get(0).value = @cellsX
+    $('#current_grid_height').html @cellsX+1
     $('#overlay_chk').attr('checked', @overlay)
     $('#instant_draw_chk').attr('checked', not @animate)
+    $('#tower_height').get(0).value = @obstacle_height
+    $('#current_tower_height').html @obstacle_height
+    $('#tower_width').get(0).value = @obstacle_width
+    $('#current_tower_width').html @obstacle_width
+
+  getConfig: ->
+      @obstacle_height = parseInt $('#tower_height').get('0').value
+      @obstacle_width = parseInt $('#tower_width').get('0').value
 
 
-  createOverlay: (e) ->
-    inx = e.clientX in [@xoffset..@rec_width+@xoffset]
-    iny = e.clientY in [@yoffset..@rec_height+@yoffset]
-    if inx and iny
-      x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
-      y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
-      # console.log "Coordinates: (#{e.clientX},#{e.clientY}) and cell: (#{x},#{y}) with value: #{@grid[x][y].type}"
-      size = if e.shiftKey then 1 else 2
-      fake = new Obstacle(x,y,size, size,4)
-      @redrawContext() if ex != x or ey != y
-      fake.draw(@xoffset, @yoffset)
-      ex = x
-      ey = y
-      @redraw = true
-    else
-      if @redraw
-        @redrawContext()
-      @redraw = false
 
 
   createhandlers: ->
@@ -594,10 +592,10 @@ class window.Game
             x = Math.floor( Math.max(e.clientX-10-@xoffset,0) / window.gridsize)
             y = Math.floor( Math.max(e.clientY-10-@yoffset,0) / window.gridsize)
             if @checkValidity(x,y)
-              @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true, @obstacle_width )
+              @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, true, @obstacle_width, @obstacle_height )
           else
-            @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, false, @obstacle_width )
-          @obstacle_height = @obstacle_width = 2
+            @theOverlay.draw(x,y, @xoffset, @yoffset, @rec_width, @rec_height, false, @obstacle_width, @obstacle_height)
+          @getConfig()
 
 
         if @mousedown
@@ -682,16 +680,15 @@ class window.Game
     $('#settings').on
       change: (e) =>
         id = $(e.currentTarget).attr 'id'
-        property = id[..id.length-7]
-        $("#current#{property}").html (parseInt($("##{property}slider").get(0).value)+1)
+        $("#current_#{id}").html (parseInt($(e.currentTarget).get(0).value)+ if id.match(/grid*/) then 1 else 0)
       mousemove: (e) =>
         e.stopPropagation()
-    , "[id*=slider]"
+    , "[type='range']"
     $('#save').on
       click: =>
         # console.log "Clicked on save"
         @debug()
-        @adjustSize(parseInt($("#heightslider").get(0).value), parseInt($("#widthslider").get(0).value))
+        @adjustSize(parseInt($("#grid_height").get(0).value), parseInt($("#grid_width").get(0).value))
         # console.log "after adjustsize "
         @debug()
         @overlay = if $('#overlay_chk').is(':checked') then true else false

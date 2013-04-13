@@ -44,7 +44,7 @@ $ ->
       string = params.string if params.string
       # console.log "String is #{string}"
 
-      game = new  window.Game(context,$('#heightslider').get(0).value,$('#widthslider').get(0).value, string)
+      game = new  window.Game(context,$('#grid_height').get(0).value,$('#grid_width').get(0).value, string)
 
 
 

@@ -35,14 +35,14 @@
   <button id="resetMaze">Reset the Maze</button>
   <div id="heightSettings">
     <label for="height" id="height">Grid Height</label>
-    <input name="height" id="heightslider" type="range" value="3" />
-    <div class="note"><span id="currentheight">3</span></div>
+    <input name="height" id="grid_height" type="range" value="3" min="1", max="500" />
+    <div class="note"><span id="current_grid_height">3</span></div>
   </div>
   <div id="widthSettings">
   <label for="width" id="width">Grid Width</label>
-  <input name="width" id="widthslider" type="range"  value="3"/>
+  <input name="width" id="grid_width" type="range"  value="3" min="1", max="500"/>
 
-    <div class="note"> <span id="currentwidth">3</span></div>
+    <div class="note"> <span id="current_grid_width">3</span></div>
   </div>
 <!--   <label for="overlaycolor" id="overlay_clr_name">Overlay Color</label>
   <input name="overlaycolor" type="color" id="overlay_clr" />
@@ -54,10 +54,10 @@
 
   <div id="towersize">
     <label for="tower_height">Tower Height</label>
-    <input type="range" name="tower_height" id="tower_height" value="2">
+    <input type="range" name="tower_height" id="tower_height" value="2" min="1", max="5" />
     <div class="note"><span id="current_tower_height">2</span></div>
     <label for="tower_width">Tower Width</label>
-    <input type="range" name="tower_width" id="tower_width" value="2">
+    <input type="range" name="tower_width" id="tower_width" value="2" min="1", max="5" />
     <div class="note"><span id="current_tower_width">2</span></div>
   </div>
 
