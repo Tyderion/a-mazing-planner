@@ -1,0 +1,74 @@
+w!!!
+%html{:lang => "en"}
+  %head
+    %meta{:charset => "utf-8"}/
+    %title Maze Planner for Gem TD (Starcraft Edition)
+    %link{:href => "mazeplanner.css", :rel => "stylesheet"}/
+    / // <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    %script{:src => "js/vendor/jquery.min.js"}
+    %script{:src => "js/vendor/jcanvas.min.js"}
+    %script{:src => "js/vendor/jquery.mousewheel.js"}
+    %script{:src => "js/vendor/jquery.cookie.js"}
+    %script{:src => "js/vendor/html5slider.js"}
+    %script{:src => "js/vendor/binaryheap.js"}
+    %script{:src => "js/vendor/graph.js"}
+    %script{:src => "js/vendor/astar.js"}
+    %script{:src => "js/vendor/luminosity.js"}
+    %script{:src => "js/vendor/jquery.ui.draggable.js"}
+    %script{:src => "js/vendor/jquery.alerts.js"}
+    %link{:href => "js/vendor/jquery.alerts.css", :media => "screen", :rel => "stylesheet", :type => "text/css"}/
+    / Compiling Coffeescript in browser, reverse order ^^
+    / // <script src="http://jashkenas.github.io/coffee-script/extras/coffee-script.js"></script>
+    / // <script src="mazeplanner.coffee" type="text/coffeescript" async></script>
+    //# %script{:async => "", :src => "js/mazeplanner.js", :type => "text/javascript"}
+    %script{:async => "", :src => "js/main.js"}
+  %body
+    / <button id="start">Start the Game</button>
+    %canvas#drawing
+    %p Your browser doesn't support canvas.
+    #settings
+      %div These Are the Settings
+      %button#resetMaze Reset the Maze
+      #heightSettings
+        %span#height.label Grid Height
+        %input#grid_height{:max => "500", :min => "1", :name => "grid_height", :type => "range", :value => "3"}/
+        .note
+          %span#current_grid_height 3
+      #widthSettings
+        %span#width.label Grid Width
+        %input#grid_width{:max => "500", :min => "1", :name => "grid_with", :type => "range", :value => "3"}/
+        .note
+          %span#current_grid_width 3
+      /
+        <span class='label'verlaycolor" id="overlay_clr_name">Overlay Color</span>
+        <input name="overlaycolor" type="color" id="overlay_clr" />
+      %span#overlay_chk_name.label Overlay?
+      %input#overlay_chk{:name => "overlaycheckbox", :type => "checkbox"}/
+      %span#instant_draw_chk_name.label Draw path instantly?
+      %input#instant_draw_chk{:name => "instant_draw_checkbox", :type => "checkbox"}/
+      %span#hide_cursor_chk_name.label Hide cursor over the Grid?
+      %input#hide_cursor_chk{:name => "hide_cursor_checkbox", :type => "checkbox"}/
+      #towersize
+        %span.label Tower Height
+        %input#tower_height{:max => "5", :min => "1", :name => "tower_height", :type => "range", :value => "2"}/
+        .note
+          %span#current_tower_height 2
+        %span.label Tower Width
+        %input#tower_width{:max => "5", :min => "1", :name => "tower_width", :type => "range", :value => "2"}/
+        .note
+          %span#current_tower_width 2
+      %button#save Save Settings
+      %ul#keyboard
+        %li c: Calculate the Path
+        %li shift-c: Remove the drawn path
+        %li r: Reset the Maze
+        %li o: Open this Dialog
+        %li click: Add a 2x2 Tower
+        %li shift-click: Add a waypoint
+        %li click-drag: Drag the maze around
+        %li Scroll: Zoom the maze
+        %li s: Show the string representation of the current maze
+        %li l: load a maze
+      %span#dns
+        I'm using
+        %a{:href => "https://freedns.afraid.org/"} FreeDNS

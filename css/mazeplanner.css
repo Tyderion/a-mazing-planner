@@ -46,7 +46,7 @@
   clear: both;
 }
 
-label {
+.label {
   padding: 2px;
   margin: 5px;
   float: left;
