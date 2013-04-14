@@ -123,11 +123,11 @@ class Maze
     gridsize: 50
     horizontal:
       offset: 0
-      cells: 3
+      cells: 10
       drawn: 0
     vertical:
       offset: 0
-      cells: 5
+      cells: 10
       drawn: 0
     border:
       left: 80
@@ -253,22 +253,26 @@ class Maze
 
 
 
+
     # Draw the Tiles
     i = j = 0
-    for x in xcells
-      for y in ycells
-        @grid[j][i].draw(x,y, @config.gridsize)
+    xoffset = Math.floor(@config.horizontal.offset/@config.gridsize)+1
+    yoffset = Math.floor(@config.vertical.offset/@config.gridsize)+1
+
+    relevant_xcells = xcells[(if xoffset < 0 then -xoffset else 0)..xcells.length-(if xoffset > 0 then xoffset else 0)]
+    relevant_ycells = ycells[(if yoffset < 0 then -yoffset else 0)..ycells.length-(if yoffset > 0 then yoffset else 0)]
+    x_coord_offset = if xoffset < 0 then -xoffset else 0
+    y_coord_offset = if yoffset < 0 then -yoffset else 0
+    for x in relevant_xcells
+      for y in relevant_ycells
+        @grid[j+x_coord_offset][i+y_coord_offset].draw(x,y, @config.gridsize)
         i++
-      i %= ycells.length
+      i %= (relevant_ycells.length)
       j++
 
     xcells.push xcells[xcells.length-1]+@config.gridsize
     ycells.push ycells[ycells.length-1]+@config.gridsize
 
-
-    # Then draw the grid
-    # console.log "Rectangle left upper corner: #{startx_rec}, #{starty_rec}"
-    # console.log "Rectangle size: #{visible_width}, #{visible_height}"
     $('canvas').drawRect
       strokeStyle: "#B0B0B0",
       strokeWidth: 2
