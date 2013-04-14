@@ -121,13 +121,14 @@ class Maze
     cursor: false
     overlay: false
     gridsize: 50
+    background_color: "#FFF"
     horizontal:
       offset: 0
-      cells: 100
+      cells: 10
       drawn: 0
     vertical:
       offset: 0
-      cells: 80
+      cells: 10
       drawn: 0
     border:
       left: 60
@@ -204,7 +205,9 @@ class Maze
     visible_height =  Math.min  @config.vertical.length()
                       ,         @config.context.height()-@config.border.bottom
 
-
+    # To check if a click is inside or outside
+    @config.horizontal.drawn = visible_width
+    @config.vertical.drawn = visible_height
 
     xoffset = Math.floor(@config.horizontal.offset/@config.gridsize)
     yoffset = Math.floor(@config.vertical.offset/@config.gridsize)
@@ -230,85 +233,62 @@ class Maze
 
 
 
-    # console.log "Visible Width: #{visible_width} and num-cells: #{visible_width/@config.gridsize}"
-    # Visible cells are either the total cells or all that can be fit into the width/height of the context
-    visibleHorizontalCells =  Math.floor  visible_width/@config.gridsize-(if xoffset > 0 then xoffset else 0), @grid[0].length-1
-    # Math.min   (@config.context.width()-@config.border.left-@config.border.right)/@config.gridsize-(if xoffset < 0 then 0 else xoffset)
-    #                                       #,          @config.horizontal.cells-(if xoffset > 0 then -xoffset else  Math.abs(xoffset))
-    #                                       ,          visible_width/@config.gridsize-(if xoffset > 0 then xoffset else 0)
-
-
-    # visibleHorizontalCells = @grid.length-1 if visibleHorizontalCells >= @grid.length
+    visibleHorizontalCells =  Math.floor visible_width/@config.gridsize-(if xoffset > 0 then xoffset else 0), @grid[0].length-1
     visibleVerticalCells =  Math.floor Math.min visible_height/@config.gridsize-(if yoffset > 0 then yoffset else 0), @grid[0].length-1
-    # Math.min  100000#(@config.context.height()-@config.border.top-@config.border.bottom)/@config.gridsize-(if yoffset < 0 then 0 else yoffset)
-    #                          #,         @config.vertical.cells-(if yoffset < 0 then -yoffset else  Math.abs(yoffset))
-    #                          ,          visible_height/@config.gridsize-(if yoffset > 0 then yoffset else 0)
-    # # visibleVerticalCells++
-    # console.log "verticals: #{visibleVerticalCells} + offset: #{yoffset} horizontals: #{visibleHorizontalCells} + offset: #{xoffset}"
-    # Save coordinates of cells in 2 lists for easy of drawing later
+
     xcells = []
     ycells = []
 
-    xcells.push startx-@config.gridsize
-    ycells.push starty-@config.gridsize
+
+
 
 
     i = 0
     # Compute the coordinates of the grid
-    x = startx# + @config.gridsize
+    x = startx
+    # Stopper is positive if stopper-many tiles could be displayed more on the canvas, but the grid of the maze is not big enough
     stopper = visibleHorizontalCells-xoffset-@grid.length+1
-    while (i < visibleHorizontalCells-(if stopper > 0 then stopper else 0))
-      if x > @config.context.width()+100
-        break
-      # if visibleHorizontalCells-xoffset-@grid.length+1 > 0
-      #   break
-      xcells.push x if  x > -@config.gridsize
-      x += @config.gridsize
-      i++
+    if visibleHorizontalCells >=  0
+      # Add on cell to the left if any are visible (to be able to view partial cells)
+      xcells.push startx-@config.gridsize if visibleHorizontalCells + xoffset > 0
+
+      # While we can still draw more tiles
+      while (i < visibleHorizontalCells-(if stopper > 0 then stopper else 0))
+        # Add the x-coordinate of the row to the list
+        xcells.push x if  x > 0 # Only push positive cordinates
+        x += @config.gridsize
+        i++
 
 
 
     j = 0
-    y = starty#+@config.gridsize
+    y = starty
+    # Stopper is positive if stopper-many tiles could be displayed more on the canvas, but the grid of the maze is not big enough
     stopper = visibleVerticalCells-yoffset-@grid[0].length+1
-    while (j < visibleVerticalCells-(if stopper > 0 then stopper else 0))
-      if y > @config.context.height()+100
-        break
-      ycells.push y if y > -@config.gridsize
-      y += @config.gridsize
-      j++
-
-
-    console.log  "#{visibleHorizontalCells-xoffset-@grid.length+1}"
-    # if visibleHorizontalCells-xoffset < @grid.length
-
+    if visibleVerticalCells >= 0
+      # Add on cell to the top if any are visible (to be able to view partial cells)
+      ycells.push starty-@config.gridsize if visibleVerticalCells + yoffset >= 0
+      # While we can still draw more tiles
+      while (j < visibleVerticalCells-(if stopper > 0 then stopper else 0))
+        # Add the y-coordinate of the col to the list
+        ycells.push y if y > 0 # Only push positive cordinates
+        y += @config.gridsize
+        j++
 
 
     # Draw the Tiles
     i = if yoffset < 0 then -yoffset else 0
     j = if xoffset < 0 then -xoffset else 0
 
-    # relevant_xcells = xcells[(if xoffset < 0 then -xoffset else 0)..xcells.length-xoffset]
-    relevant_xcells = xcells#[0..xcells.length]
-
-    relevant_ycells = ycells#[(if yoffset < 0 then -yoffset else 0)..ycells.length-(if yoffset > 0 then yoffset else 0)]
-    # console.log relevant_ycells
-    # console.log xcells.length
-    # console.log ycells
-    for x in relevant_xcells
-      for y in relevant_ycells
-        # console.log "Accessing #{j+x_coord_offset}"
-        # break if j >= @grid.length or i >= @grid[0].length
+    for x in xcells
+      for y in ycells
         @grid[j]?[i]?.draw(x,y, @config.gridsize)
         i++
       i = if yoffset < 0 then -yoffset else 0
       j++
 
-    # xcells.push xcells[xcells.length-1]+@config.gridsize
-    # ycells.push ycells[ycells.length-1]+@config.gridsize
 
-
-
+    # Draw the rectangle-border around the tiles
     $('canvas').drawRect
       strokeStyle: "#B0B0B0",
       strokeWidth: 2
@@ -318,11 +298,9 @@ class Maze
       fromCenter: false
 
 
-    @config.horizontal.drawn = visible_width
-    @config.vertical.drawn = visible_height
-
-    ycells.push ycells[ycells.length-1]+@config.gridsize
-    xcells.push xcells[xcells.length-1]+@config.gridsize
+    # Push one more coordinate for the last line
+    ycells.push ycells[ycells.length-1]+@config.gridsize if ycells.length > 0
+    xcells.push xcells[xcells.length-1]+@config.gridsize if xcells.length > 0
 
     for x in xcells
       $("canvas").drawLine
@@ -340,41 +318,43 @@ class Maze
 
 
 
-    # And the last step is a white border around the grid to cut off any excess rounded-rectangles.
+    # Finally draw some rectangles around the border-rectangle to cut off any tiles.
     # Left Border
+    opacity = 1 ## Debug = 0.5, Prod = 1
+
     $('canvas').drawRect
-      fillStyle: "#0FF000", #ColorLuminance(@color, @color_bias),
+      fillStyle: @config.background_color,
       x: 0, y: 0
       width: startx_rec-1
       height: @config.context.height()
       fromCenter: false
-      opacity: 0.5
+      opacity: opacity
 
     # Bottom Border
     $('canvas').drawRect
-      fillStyle: "#F0F000", #ColorLuminance(@color, @color_bias),
+      fillStyle: @config.background_color,
       x: 0, y: starty_rec + visible_height+1
       width: @config.context.width()
       height: @config.context.height()- (starty_rec + visible_height)
       fromCenter: false
-      opacity: 0.5
+      opacity: opacity
 
     # #Top Border
     $('canvas').drawRect
-      fillStyle: "#FFF0F0", #ColorLuminance(@color, @color_bias),
+      fillStyle: @config.background_color,
       x: 0, y: 0
       width: @config.context.width()
       height: starty_rec-1
       fromCenter: false
-      opacity: 0.5
+      opacity: opacity
     # Right Border
     $('canvas').drawRect
-      fillStyle: "#FF0000", #ColorLuminance(@color, @color_bias),
+      fillStyle: @config.background_color,
       x: startx_rec+visible_width+1, y: 0
       width: @config.context.width()- (startx_rec + visible_width)
       height: @config.context.height()
       fromCenter: false
-      opacity: 0.5
+      opacity: opacity
 
 
 
