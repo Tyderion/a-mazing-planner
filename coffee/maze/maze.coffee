@@ -3,9 +3,10 @@ class Tile
   type: null
   width: 1
   height: 1
-  constructor: (@x, @y) ->
-    if Math.random() > 0.5
-      @type =  true
+  constructor: (@x, @y, @type) ->
+    unless @type
+      if Math.random() > 0.5
+        @type =  true
 
 
   draw: (xcoords, ycoords, gridsize) ->
@@ -41,10 +42,10 @@ class Maze
       cells: 5
       drawn: 0
     border:
-      left: 60
-      right: 100
-      top: 60
-      bottom: 60
+      left: 20
+      right: 20
+      top: 20
+      bottom: 20
     cookie:
       name: "mazev2"
       content: ""
@@ -62,18 +63,30 @@ class Maze
 
 
   constructor: (@context) ->
-    @grid = for x in [0..@config.horizontal.cells-1]
-      for y in [0..@config.vertical.cells-1]
-           new Tile(x, y)
+
     # @debug()
+    @createGrid()
     @createConfig()
     @createHandlers()
     @config.horizontal.offset =  @config.vertical.offset = @config.gridsize
-    $('#drawing').css
-      position: "absolute"
-      top: @config.border.top
-      left: @config.border.left
+    # $('#drawing').css
+    #   position: "absolute"
+    #   top: @config.border.top
+    #   left: @config.border.left
 
+
+
+
+  createGrid: ->
+    @grid = for x in [0..@config.horizontal.cells-1]
+      for y in [0..@config.vertical.cells-1]
+           new Tile(x, y)
+
+  updateGrid: ->
+    # console.log "old: #{@grid.length}x#{@grid[0].length} and new: #{@config.horizontal.cells}x#{@config.vertical.cells}"
+    @grid = for x in [0..@config.horizontal.cells-1]
+      for y in [0..@config.vertical.cells-1]
+           new Tile(x, y,@grid[x]?[y]?.type)
 
 
   createConfig: ->
@@ -161,7 +174,7 @@ class Maze
     stopper = visibleHorizontalCells-xoffset-@grid.length+1
     if visibleHorizontalCells >=  0
       # Add on cell to the left if any are visible (to be able to view partial cells)
-      xcells.push startx-@config.gridsize if visibleHorizontalCells + xoffset > 0 and visibleHorizontalCells <= @grid.length
+      xcells.push startx-@config.gridsize# if visibleHorizontalCells + xoffset > 0 #and visibleHorizontalCells <= @grid.length
 
       # While we can still draw more tiles
       while (i < visibleHorizontalCells-(if stopper > 0 then stopper else 0))
@@ -178,11 +191,12 @@ class Maze
     stopper = visibleVerticalCells-yoffset-@grid[0].length+1
     if visibleVerticalCells >= 0
       # Add on cell to the top if any are visible (to be able to view partial cells)
-      ycells.push starty-@config.gridsize if visibleVerticalCells + yoffset >= 0
+      # console.log visibleVerticalCells + yoffset >= 0
+      ycells.push starty-@config.gridsize #if visibleVerticalCells + yoffset >= 0
       # While we can still draw more tiles
-      while (j < visibleVerticalCells-(if stopper > 0 then stopper else 0))
+      while (j <= visibleVerticalCells-(if stopper > 0 then stopper else 0))
         # Add the y-coordinate of the col to the list
-        ycells.push y if y > 0 # Only push positive cordinates
+        ycells.push y if y > 0 and j < (@grid[0].length-Math.abs(yoffset))# Only push positive cordinates
         y += @config.gridsize
         j++
 
@@ -210,21 +224,22 @@ class Maze
 
 
     # Push one more coordinate for the last line
-    ycells.push ycells[ycells.length-1]+@config.gridsize if ycells.length > 0
+    ycells.push ycells[ycells.length-1]+@config.gridsize if ycells.length > 0 and j < @grid.length
     xcells.push xcells[xcells.length-1]+@config.gridsize if xcells.length > 0
 
-    for x in xcells
-      $("canvas").drawLine
-        strokeStyle: "#B0B0B0" ,
-        strokeWidth: 1,
-        x1: x, y1: ycells[0],
-        x2: x, y2: ycells[ycells.length-1]
-    for y in ycells
-      $("canvas").drawLine
-        strokeStyle: "#B0B0B0" ,
-        strokeWidth: 1,
-        x1: xcells[0], y1: y,
-        x2: xcells[xcells.length-1], y2: y
+    if @grid.length+xoffset >= 0 and yoffset+@grid[0].length >= 0
+      for x in xcells
+        $("canvas").drawLine
+          strokeStyle: "#B0B0B0" ,
+          strokeWidth: 1,
+          x1: x, y1: ycells[0],
+          x2: x, y2: ycells[ycells.length-1]
+      for y in ycells
+        $("canvas").drawLine
+          strokeStyle: "#B0B0B0" ,
+          strokeWidth: 1,
+          x1: xcells[0], y1: y,
+          x2: xcells[xcells.length-1], y2: y
 
 
 
@@ -296,12 +311,19 @@ class Maze
     iny = event.clientY-top in range_y
     return inx and iny
 
+  updateSettings: =>
+    @config.horizontal.cells = $('#grid_width').get(0).value
+    @config.vertical.cells = $('#grid_height').get(0).value
+    @updateGrid()
+    @draw()
+
   createHandlers: =>
     $('#save').on
       click: (e) =>
-        $('#settings').hide()
-        e.stopPropagation()
-        @config.started = true
+        # $('#settings').hide()
+        # e.stopPropagation()
+        # @config.started = true
+        @updateSettings()
         @draw()
     $('#drawing').on
       mousewheel: (e, delta, deltaX, deltaY) =>
@@ -312,17 +334,22 @@ class Maze
 
         if @config.timeout <= 0
           @config.timeout = window.setTimeout(@draw, 20)
-    $('html').on
+    $('#settings').on
+      change: (e) =>
+        id = $(e.currentTarget).attr 'id'
+        $("#current_#{id}").html (parseInt($(e.currentTarget).get(0).value))
+      mousemove: (e) =>
+        e.stopPropagation()
+    , "[type='range']"
+    $('#drawing').on
       mousedown: (event) =>
-        if @config.started
-          if @inRectangle(event)
-            @config.mousein = event
-          else
-            @config.mouseout = event
-            console.log "Clicked outside the grid"
-            # mouseout = event
+        if @inRectangle(event)
+          @config.mousein = event
+        else
+          @config.mouseout = event
+          console.log "Clicked outside the grid"
+          # mouseout = event
       mousemove: (event) =>
-        # console.log "Mousemove"
         if @config.mousein
           @config.horizontal.offset += (event.clientX - @config.mousein.clientX)
           @config.vertical.offset += (event.clientY - @config.mousein.clientY)
@@ -336,8 +363,6 @@ class Maze
           if @config.border.left+xdiff < 1
            @config.border.left = 1
           @config.moved = true
-
-
           ydiff = event.clientY - @config.mouseout.clientY
           if ydiff < 0 or @config.border.top + @config.vertical.drawn + ydiff < @config.context.height()
             @config.border.top += ydiff
@@ -384,6 +409,8 @@ $ ->
       params[tmparr[0]] = tmparr[1]
       i++
     window.maze = new Maze(context)
+    window.maze.started = true
+    window.maze.draw()
     # console.log maze.config.context.width()
 
 

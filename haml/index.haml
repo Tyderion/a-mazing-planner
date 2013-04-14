@@ -31,14 +31,14 @@
       %button#resetMaze Reset the Maze
       #heightSettings
         %span#height.label Grid Height
-        %input#grid_height{:max => "500", :min => "1", :name => "grid_height", :type => "range", :value => "3"}/
+        %input#grid_height{:max => "100", :min => "1", :name => "grid_height", :type => "range", :value => "10"}/
         .note
-          %span#current_grid_height 3
+          %span#current_grid_height 10
       #widthSettings
         %span#width.label Grid Width
-        %input#grid_width{:max => "500", :min => "1", :name => "grid_with", :type => "range", :value => "3"}/
+        %input#grid_width{:max => "100", :min => "1", :name => "grid_width", :type => "range", :value => "10"}/
         .note
-          %span#current_grid_width 3
+          %span#current_grid_width 10
       /
         <span class='label'verlaycolor" id="overlay_clr_name">Overlay Color</span>
         <input name="overlaycolor" type="color" id="overlay_clr" />
