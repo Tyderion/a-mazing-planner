@@ -100,7 +100,6 @@ class Tile
 
   draw: (xcoords, ycoords, gridsize) ->
     if @type
-      # console.log "Drawing #{width*gridsize},#{height*gridsize}"
       $('canvas').drawRect
         fillStyle: "#FF00FF", #ColorLuminance(@color, @color_bias),
         x: xcoords, y: ycoords
@@ -125,9 +124,11 @@ class Maze
     horizontal:
       offset: 0
       cells: 3
+      drawn: 0
     vertical:
       offset: 0
       cells: 5
+      drawn: 0
     border:
       left: 80
       right: 80
@@ -139,9 +140,11 @@ class Maze
       options: { path: '/'}
     context: {}
     timout: 0
+    mousein: null
 
 
   waypoints: []
+
 
 
 
@@ -162,9 +165,11 @@ class Maze
 
   createConfig: ->
     @config.horizontal.length =  =>
-      Math.min @config.horizontal.cells*@config.gridsize, @config.context.width()-@config.border.left - @config.horizontal.offset
+      Math.min  @config.horizontal.cells*@config.gridsize
+      ,         @config.context.width()-@config.border.left
     @config.vertical.length = =>
-      Math.min @config.vertical.cells*@config.gridsize, @config.context.height()-@config.border.top - @config.vertical.offset
+      Math.min  @config.vertical.cells*@config.gridsize
+      ,         @config.context.height()-@config.border.top
     @config.context.width = (newwidth) =>
       if newwidth
         @context.canvas.width = newwidth
@@ -182,40 +187,43 @@ class Maze
   draw: =>
     $('canvas').clearCanvas()
     @recalculateCanvasDimensions()
-    visibleHorizontalCells = Math.min @config.context.width()/@config.gridsize, @config.horizontal.cells
-    # console.log "visible-cells: #{visibleHorizontalCells} - #{@config.horizontal.cells}"
-    visibleVerticalCells = Math.min (@config.context.width()/@config.context.height())*@config.gridsize, @config.vertical.cells
+    # Visible cells are either the total cells or all that can be fit into the width/height of the context
+    visibleHorizontalCells =  Math.min  @config.context.width()/@config.gridsize
+                             ,          @config.horizontal.cells
+    visibleVerticalCells =  Math.min  (@config.context.width()/@config.context.height())*@config.gridsize
+                            ,         @config.vertical.cells
+
+    # Topmost corner of the grid
     startx = @config.border.left
     starty = @config.border.top
-    if @config.horizontal.offset < 0
-      visible_width = @config.horizontal.length() + @config.horizontal.offset
-    else
-      startx += @config.horizontal.offset
-      visible_width = Math.min @config.horizontal.length(), @config.context.width()-@config.border.right-@config.border.left
+    startx_rec = @config.border.left
+    starty_rec = @config.border.top
 
-    if @config.vertical.offset < 0
-      visible_height = @config.vertical.length() + @config.vertical.offset
-    else
-      starty += @config.vertical.offset
-      visible_height = Math.min @config.vertical.length(), @config.context.height()-@config.border.bottom-@config.border.top
+    # Take into account the offset
+    # if @config.horizontal.offset < 0
+    #   visible_width = @config.horizontal.length() + @config.horizontal.offset
+    # else
+    startx += @config.horizontal.offset
+    visible_width = Math.min  @config.horizontal.length()
+                    ,         @config.context.width()-@config.border.right-@config.border.left
 
-    # if @config.border.left + visible_width + @config.border.right > @config.context.width()
-    #   visible_width -= @config.border.right
+    # visible_width += @config.horizontal.offset
 
-    # if @config.border.top + visible_height + @config.border.bottom > @config.context.height()
-    #   visible_height -= @config.border.bottom
-    console.log "Dims: #{visible_width},#{visible_height}, max: #{@config.border.left + visible_width + @config.border.right},#{@config.border.top + visible_height + @config.border.bottom}"
+    # if @config.vertical.offset < 0
+    #   visible_height = @config.vertical.length() + @config.vertical.offset
+    # else
+    starty += @config.vertical.offset
+    visible_height =  Math.min  @config.vertical.length()
+                      ,         @config.context.height()-@config.border.bottom-@config.border.top
+# #
+    # visible_width += @config.vertical.offset
 
-    console.log "Canvas: #{@config.context.width()},#{@config.context.height()}"
+
+    # console.log "Dims: #{visible_width},#{visible_height}, max: #{@config.border.left + visible_width + @config.border.right},#{@config.border.top + visible_height + @config.border.bottom}"
+
+    # console.log "Canvas: #{@config.context.width()},#{@config.context.height()}"
 
 
-    $('canvas').drawRect
-      strokeStyle: "#B0B0B0",
-      strokeWidth: 2
-      x: startx, y: starty
-      width: visible_width
-      height: visible_height
-      fromCenter: false
 
 
     # Save coordinates of cells in 2 lists for easy of drawing later
@@ -224,16 +232,12 @@ class Maze
 
     i = 0
 
+    # Compute the coordinates of the grid
     x = startx + @config.gridsize
     while (i < visibleHorizontalCells-1)
       if x > startx+visible_width
         break
       xcells.push x
-      $("canvas").drawLine
-        strokeStyle: "#B0B0B0" ,
-        strokeWidth: 1,
-        x1: x, y1: starty,
-        x2: x, y2: visible_height+starty
       x += @config.gridsize
       i++
 
@@ -243,23 +247,86 @@ class Maze
       if y > starty+visible_height
         break
       ycells.push y
+      y += @config.gridsize
+      j++
+
+
+
+    # Draw the Tiles
+    i = j = 0
+    for x in xcells
+      for y in ycells
+        @grid[j][i].draw(x,y, @config.gridsize)
+        i++
+      i %= ycells.length
+      j++
+
+    xcells.push xcells[xcells.length-1]+@config.gridsize
+    ycells.push ycells[ycells.length-1]+@config.gridsize
+
+
+    # Then draw the grid
+    # console.log "Rectangle left upper corner: #{startx_rec}, #{starty_rec}"
+    # console.log "Rectangle size: #{visible_width}, #{visible_height}"
+    $('canvas').drawRect
+      strokeStyle: "#B0B0B0",
+      strokeWidth: 2
+      x: startx_rec, y: starty_rec
+      width: visible_width
+      height: visible_height
+      fromCenter: false
+
+
+    @config.horizontal.drawn = visible_width
+    @config.vertical.drawn = visible_height
+
+
+    for x in xcells
+      $("canvas").drawLine
+        strokeStyle: "#B0B0B0" ,
+        strokeWidth: 1,
+        x1: x, y1: starty,
+        x2: x, y2: visible_height+starty
+    for y in ycells
       $("canvas").drawLine
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
         x1: startx, y1: y,
         x2: startx+visible_width, y2: y
 
-      y += @config.gridsize
-      j++
 
-    i = j = 0
-    console.log xcells
-    console.log ycells
-    for x in xcells
-      for y in ycells
-        @grid[i][j].draw(x,y, @config.gridsize)
-        j++ if j < ycells.length-1
-      i++ if i < xcells.length-1
+
+    # And the last step is a white border around the grid to cut off any excess rounded-rectangles.
+    # Left Border
+    $('canvas').drawRect
+      fillStyle: "#FFF", #ColorLuminance(@color, @color_bias),
+      x: 0, y: 0
+      width: startx_rec-1
+      height: @config.context.height()
+      fromCenter: false
+
+    # Right Border
+    $('canvas').drawRect
+      fillStyle: "#FFF", #ColorLuminance(@color, @color_bias),
+      x: 0, y: starty_rec + visible_height+1
+      width: @config.context.width()
+      height: @config.context.height()- (starty_rec + visible_height)
+      fromCenter: false
+
+    # Bottom Border
+    $('canvas').drawRect
+      fillStyle: "#FFF", #ColorLuminance(@color, @color_bias),
+      x: startx_rec+visible_width+1, y: 0
+      width: @config.context.width() - startx_rec - visible_width
+      height: @config.context.height()
+      fromCenter: false
+    $('canvas').drawRect
+      fillStyle: "#FFF", #ColorLuminance(@color, @color_bias),
+      x: 0, y: 0
+      width: @config.context.width() - startx_rec - visible_width
+      height: starty_rec-1
+      fromCenter: false
+
 
     @config.timeout = 0
 
@@ -293,16 +360,34 @@ class Maze
 
         if @config.timeout <= 0
           @config.timeout = window.setTimeout(@draw, 20)
+    $('html').on
+      mousedown: (event) =>
+        left = @config.border.left+$('#drawing').position().left
+        top = @config.border.top+$('#drawing').position().top
+        range_x =  [0..@config.horizontal.drawn]
+        range_y =  [0..@config.vertical.drawn]
+        inx = event.clientX-left in range_x
+        iny = event.clientY-top in range_y
+        if inx and iny
+          console.log "Clicked in the grid"
+          @config.mousein = event
+        else
+          console.log "Clicked outside the grid"
+          # mouseout = event
+      mousemove: (event) =>
+        if @config.mousein
+          @config.horizontal.offset += (event.clientX - @config.mousein.clientX)
+          @config.vertical.offset += (event.clientY - @config.mousein.clientY)
+          @config.mousein = event
+          @config.timout = setTimeout @draw, 20
+      mouseup: (event) =>
+        @config.mousein = null
 
 
 
 
 
 $ ->
-  # $('body').css
-  #   width: window.innerWidth
-  #   height: window.innerHeight
-
   drawingCanvas = $("#drawing").get(0)
   if drawingCanvas.getContext
     $('p').remove()
