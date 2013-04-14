@@ -123,15 +123,15 @@ class Maze
     gridsize: 50
     horizontal:
       offset: 0
-      cells: 10
+      cells: 50
       drawn: 0
     vertical:
       offset: 0
-      cells: 10
+      cells: 1
       drawn: 0
     border:
-      left: 80
-      right: 20
+      left: 20
+      right: 100
       top: 20
       bottom: 20
     cookie:
@@ -188,12 +188,16 @@ class Maze
   draw: =>
     $('canvas').clearCanvas()
     @recalculateCanvasDimensions()
+    #Offset
+    xoffset = Math.floor(@config.horizontal.offset/@config.gridsize)+1
+    yoffset = Math.floor(@config.vertical.offset/@config.gridsize)+1
     # Visible cells are either the total cells or all that can be fit into the width/height of the context
-    visibleHorizontalCells =  Math.min  @config.context.width()/@config.gridsize
-                             ,          @config.horizontal.cells
-    visibleVerticalCells =  Math.min  (@config.context.width()/@config.context.height())*@config.gridsize
+    visibleHorizontalCells =  Math.floor Math.min  (@config.context.width()-@config.border.left-@config.border.right)/@config.gridsize-(if xoffset < 0 then 0 else xoffset)
+                             ,          @config.horizontal.cells-(if xoffset > 0 then -xoffset else  Math.abs(xoffset))
+    # console.log "horizontals: #{visibleHorizontalCells}"
+    visibleVerticalCells =  Math.floor Math.min  (@config.context.width()/@config.context.height())*@config.gridsize
                             ,         @config.vertical.cells
-
+    console.log "hoirz: #{visibleHorizontalCells} + offset: #{xoffset}"
     # Topmost corner of the grid
     startx = @config.border.left
     starty = @config.border.top
@@ -204,7 +208,13 @@ class Maze
     # if @config.horizontal.offset < 0
     #   visible_width = @config.horizontal.length() + @config.horizontal.offset
     # else
-    startx += @config.horizontal.offset
+    if xoffset >= 0
+      startx +=  @config.horizontal.offset
+    if xoffset < 0
+      startx += @config.horizontal.offset - xoffset* @config.gridsize # Modulo but not with builtin because of floor for
+
+    @config.previous_xoffset = xoffset
+
     visible_width = Math.min  @config.horizontal.length()
                     ,         @config.context.width()-@config.border.right
 
@@ -228,19 +238,24 @@ class Maze
 
 
     # Save coordinates of cells in 2 lists for easy of drawing later
-    xcells = [startx]
+    xcells = []
+    xcells.push startx if startx > 0-@config.gridsize
     ycells = [starty]
 
     i = 0
 
+
+
     # Compute the coordinates of the grid
     x = startx + @config.gridsize
-    while (i < visibleHorizontalCells-1)
-      if x > startx+visible_width
+    while (i < visibleHorizontalCells+1)
+      if x > @config.context.width()+100
         break
-      xcells.push x
+      xcells.push x if  x > 0
       x += @config.gridsize
       i++
+
+
 
     j = 0
     y = starty + @config.gridsize
@@ -255,22 +270,27 @@ class Maze
 
 
     # Draw the Tiles
-    i = j = 0
-    xoffset = Math.floor(@config.horizontal.offset/@config.gridsize)+1
-    yoffset = Math.floor(@config.vertical.offset/@config.gridsize)+1
+    i = 0
+    j = if xoffset < 0 then -xoffset else 0
 
-    relevant_xcells = xcells[(if xoffset < 0 then -xoffset else 0)..xcells.length-(if xoffset > 0 then xoffset else 0)]
+    # relevant_xcells = xcells[(if xoffset < 0 then -xoffset else 0)..xcells.length-xoffset]
+    relevant_xcells = xcells#[0..xcells.length]
+
     relevant_ycells = ycells[(if yoffset < 0 then -yoffset else 0)..ycells.length-(if yoffset > 0 then yoffset else 0)]
-    x_coord_offset = if xoffset < 0 then -xoffset else 0
+    x_coord_offset = 0#if xoffset > 0 then 0 else -xoffset
     y_coord_offset = if yoffset < 0 then -yoffset else 0
     for x in relevant_xcells
       for y in relevant_ycells
-        @grid[j+x_coord_offset][i+y_coord_offset].draw(x,y, @config.gridsize)
+        # console.log "Accessing #{j+x_coord_offset}"
+        @grid[Math.min(j+x_coord_offset, @grid.length-1)][i+y_coord_offset].draw(x,y, @config.gridsize)
         i++
-      i %= (relevant_ycells.length)
+      i = i%(relevant_ycells.length)
       j++
 
     xcells.push xcells[xcells.length-1]+@config.gridsize
+    console.log xcells.length
+
+
     ycells.push ycells[ycells.length-1]+@config.gridsize
 
     $('canvas').drawRect
@@ -297,7 +317,8 @@ class Maze
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
         x1: startx, y1: y,
-        x2: startx+visible_width, y2: y
+        x2: startx+(visibleHorizontalCells+2)*@config.gridsize, y2: y
+
 
 
 
