@@ -124,11 +124,11 @@ class Maze
     background_color: "#FFF"
     horizontal:
       offset: 0
-      cells: 10
+      cells: 50
       drawn: 0
     vertical:
       offset: 0
-      cells: 10
+      cells: 50
       drawn: 0
     border:
       left: 60
@@ -158,6 +158,7 @@ class Maze
     # @debug()
     @createConfig()
     @createHandlers()
+    @config.horizontal.offset =  @config.vertical.offset = @config.gridsize
     $('#drawing').css
       position: "absolute"
       top: @config.border.top
@@ -250,7 +251,7 @@ class Maze
     stopper = visibleHorizontalCells-xoffset-@grid.length+1
     if visibleHorizontalCells >=  0
       # Add on cell to the left if any are visible (to be able to view partial cells)
-      xcells.push startx-@config.gridsize if visibleHorizontalCells + xoffset > 0
+      xcells.push startx-@config.gridsize if visibleHorizontalCells + xoffset > 0 and visibleHorizontalCells <= @grid.length
 
       # While we can still draw more tiles
       while (i < visibleHorizontalCells-(if stopper > 0 then stopper else 0))
@@ -320,7 +321,7 @@ class Maze
 
     # Finally draw some rectangles around the border-rectangle to cut off any tiles.
     # Left Border
-    opacity = 1 ## Debug = 0.5, Prod = 1
+    opacity = 0.5 ## Debug = 0.5, Prod = 1
 
     $('canvas').drawRect
       fillStyle: @config.background_color,
@@ -403,6 +404,7 @@ class Maze
           iny = event.clientY-top in range_y
           if inx and iny
             console.log "Clicked in the grid"
+            X =
             @config.mousein = event
           else
             @config.mouseout = event
