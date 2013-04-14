@@ -123,17 +123,17 @@ class Maze
     gridsize: 50
     horizontal:
       offset: 0
-      cells: 10
+      cells: 100
       drawn: 0
     vertical:
       offset: 0
-      cells: 5
+      cells: 80
       drawn: 0
     border:
       left: 60
       right: 100
       top: 60
-      bottom: 20
+      bottom: 60
     cookie:
       name: "mazev2"
       content: ""
@@ -232,16 +232,18 @@ class Maze
 
     # console.log "Visible Width: #{visible_width} and num-cells: #{visible_width/@config.gridsize}"
     # Visible cells are either the total cells or all that can be fit into the width/height of the context
-    visibleHorizontalCells =  Math.floor  Math.min   (@config.context.width()-@config.border.left-@config.border.right)/@config.gridsize-(if xoffset < 0 then 0 else xoffset)
-                                          ,          @config.horizontal.cells-(if xoffset > 0 then -xoffset else  Math.abs(xoffset))
-                                          ,          visible_width/@config.gridsize-(if xoffset > 0 then xoffset else 0)
+    visibleHorizontalCells =  Math.floor  visible_width/@config.gridsize-(if xoffset > 0 then xoffset else 0), @grid[0].length-1
+    # Math.min   (@config.context.width()-@config.border.left-@config.border.right)/@config.gridsize-(if xoffset < 0 then 0 else xoffset)
+    #                                       #,          @config.horizontal.cells-(if xoffset > 0 then -xoffset else  Math.abs(xoffset))
+    #                                       ,          visible_width/@config.gridsize-(if xoffset > 0 then xoffset else 0)
 
 
     # visibleHorizontalCells = @grid.length-1 if visibleHorizontalCells >= @grid.length
-    visibleVerticalCells =  Math.floor Math.min  (@config.context.height()-@config.border.top-@config.border.bottom)/@config.gridsize-(if yoffset < 0 then 0 else yoffset)
-                             ,         @config.vertical.cells-(if yoffset < 0 then -yoffset else  Math.abs(yoffset))
-                             ,          visible_height/@config.gridsize-(if yoffset > 0 then yoffset else 0)
-    # visibleVerticalCells++
+    visibleVerticalCells =  Math.floor Math.min visible_height/@config.gridsize-(if yoffset > 0 then yoffset else 0), @grid[0].length-1
+    # Math.min  100000#(@config.context.height()-@config.border.top-@config.border.bottom)/@config.gridsize-(if yoffset < 0 then 0 else yoffset)
+    #                          #,         @config.vertical.cells-(if yoffset < 0 then -yoffset else  Math.abs(yoffset))
+    #                          ,          visible_height/@config.gridsize-(if yoffset > 0 then yoffset else 0)
+    # # visibleVerticalCells++
     # console.log "verticals: #{visibleVerticalCells} + offset: #{yoffset} horizontals: #{visibleHorizontalCells} + offset: #{xoffset}"
     # Save coordinates of cells in 2 lists for easy of drawing later
     xcells = []
@@ -254,9 +256,12 @@ class Maze
     i = 0
     # Compute the coordinates of the grid
     x = startx# + @config.gridsize
-    while (i < visibleHorizontalCells)
+    stopper = visibleHorizontalCells-xoffset-@grid.length+1
+    while (i < visibleHorizontalCells-(if stopper > 0 then stopper else 0))
       if x > @config.context.width()+100
         break
+      # if visibleHorizontalCells-xoffset-@grid.length+1 > 0
+      #   break
       xcells.push x if  x > -@config.gridsize
       x += @config.gridsize
       i++
@@ -265,13 +270,17 @@ class Maze
 
     j = 0
     y = starty#+@config.gridsize
-    while (j < visibleVerticalCells)
-      # if y > @config.context.height()+100
-      #   break
+    stopper = visibleVerticalCells-yoffset-@grid[0].length+1
+    while (j < visibleVerticalCells-(if stopper > 0 then stopper else 0))
+      if y > @config.context.height()+100
+        break
       ycells.push y if y > -@config.gridsize
       y += @config.gridsize
       j++
 
+
+    console.log  "#{visibleHorizontalCells-xoffset-@grid.length+1}"
+    # if visibleHorizontalCells-xoffset < @grid.length
 
 
 
@@ -312,6 +321,8 @@ class Maze
     @config.horizontal.drawn = visible_width
     @config.vertical.drawn = visible_height
 
+    ycells.push ycells[ycells.length-1]+@config.gridsize
+    xcells.push xcells[xcells.length-1]+@config.gridsize
 
     for x in xcells
       $("canvas").drawLine
