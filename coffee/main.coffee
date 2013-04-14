@@ -94,6 +94,21 @@ class Tile
   width: 1
   height: 1
   constructor: (@x, @y) ->
+    if Math.random() > 0.5
+      @type =  true
+
+
+  draw: (xcoords, ycoords, gridsize) ->
+    if @type
+      # console.log "Drawing #{width*gridsize},#{height*gridsize}"
+      $('canvas').drawRect
+        fillStyle: "#FF00FF", #ColorLuminance(@color, @color_bias),
+        x: xcoords, y: ycoords
+        width: @width*gridsize
+        height: @height*gridsize
+        fromCenter: false
+        cornerRadius: gridsize/4,
+
 
 
   string: ->
@@ -202,11 +217,18 @@ class Maze
       height: visible_height
       fromCenter: false
 
+
+    # Save coordinates of cells in 2 lists for easy of drawing later
+    xcells = [startx]
+    ycells = [starty]
+
     i = 0
+
     x = startx + @config.gridsize
     while (i < visibleHorizontalCells-1)
       if x > startx+visible_width
         break
+      xcells.push x
       $("canvas").drawLine
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
@@ -220,6 +242,7 @@ class Maze
     while (j < visibleVerticalCells-1)
       if y > starty+visible_height
         break
+      ycells.push y
       $("canvas").drawLine
         strokeStyle: "#B0B0B0" ,
         strokeWidth: 1,
@@ -228,6 +251,16 @@ class Maze
 
       y += @config.gridsize
       j++
+
+    i = j = 0
+    console.log xcells
+    console.log ycells
+    for x in xcells
+      for y in ycells
+        @grid[i][j].draw(x,y, @config.gridsize)
+        j++ if j < ycells.length-1
+      i++ if i < xcells.length-1
+
     @config.timeout = 0
 
   recalculateCanvasDimensions: ->
