@@ -1,3 +1,4 @@
+
 class Obstacle
 
   constructor: (posx, posy, width, height, type, num = -1) ->

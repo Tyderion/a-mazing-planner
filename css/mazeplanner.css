@@ -1,5 +1,8 @@
+body {
+  height: 100%;
+  widht: 100%;
+}
 #settings {
-  display: none;
   position: absolute;
   top: 100px;
   left: 100px;
