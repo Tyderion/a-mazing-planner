@@ -41,7 +41,7 @@ class Maze
       drawn: 0
     border:
       left: 80
-      right: 80
+      right: 20
       top: 20
       bottom: 20
     cookie:
@@ -51,6 +51,7 @@ class Maze
     context: {}
     timout: 0
     mousein: null
+    mousout: null
 
 
   waypoints: []
@@ -115,7 +116,7 @@ class Maze
     # else
     startx += @config.horizontal.offset
     visible_width = Math.min  @config.horizontal.length()
-                    ,         @config.context.width()-@config.border.right-@config.border.left
+                    ,         @config.context.width()-@config.border.right
 
     # visible_width += @config.horizontal.offset
 
@@ -124,7 +125,7 @@ class Maze
     # else
     starty += @config.vertical.offset
     visible_height =  Math.min  @config.vertical.length()
-                      ,         @config.context.height()-@config.border.bottom-@config.border.top
+                      ,         @config.context.height()-@config.border.bottom
 # #
     # visible_width += @config.vertical.offset
 
@@ -209,40 +210,46 @@ class Maze
     # And the last step is a white border around the grid to cut off any excess rounded-rectangles.
     # Left Border
     $('canvas').drawRect
-      fillStyle: "#FFF", #ColorLuminance(@color, @color_bias),
+      fillStyle: "#0FF000", #ColorLuminance(@color, @color_bias),
       x: 0, y: 0
       width: startx_rec-1
       height: @config.context.height()
       fromCenter: false
+      opacity: 0.5
 
-    # Right Border
+    # Bottom Border
     $('canvas').drawRect
-      fillStyle: "#FFF", #ColorLuminance(@color, @color_bias),
+      fillStyle: "#F0F000", #ColorLuminance(@color, @color_bias),
       x: 0, y: starty_rec + visible_height+1
       width: @config.context.width()
       height: @config.context.height()- (starty_rec + visible_height)
       fromCenter: false
+      opacity: 0.5
 
-    # Bottom Border
+    # #Top Border
     $('canvas').drawRect
-      fillStyle: "#FFF", #ColorLuminance(@color, @color_bias),
-      x: startx_rec+visible_width+1, y: 0
-      width: @config.context.width() - startx_rec - visible_width
-      height: @config.context.height()
-      fromCenter: false
-    $('canvas').drawRect
-      fillStyle: "#FFF", #ColorLuminance(@color, @color_bias),
+      fillStyle: "#FFF0F0", #ColorLuminance(@color, @color_bias),
       x: 0, y: 0
-      width: @config.context.width() - startx_rec - visible_width
+      width: @config.context.width()
       height: starty_rec-1
       fromCenter: false
+      opacity: 0.5
+    # Right Border
+    $('canvas').drawRect
+      fillStyle: "#FF0000", #ColorLuminance(@color, @color_bias),
+      x: startx_rec+visible_width+1, y: 0
+      width: @config.context.width()- (startx_rec + visible_width)
+      height: @config.context.height()
+      fromCenter: false
+      opacity: 0.5
+
 
 
     @config.timeout = 0
 
   recalculateCanvasDimensions: ->
-    @config.context.width window.innerWidth-@config.border.left-@config.border.right
-    @config.context.height window.innerHeight-@config.border.top-@config.border.bottom
+    @config.context.width window.innerWidth-@config.border.right-$('#drawing').position().left
+    @config.context.height window.innerHeight-@config.border.bottom-$('#drawing').position().top
 
   debug: =>
     string = ""
@@ -260,6 +267,8 @@ class Maze
     $('#save').on
       click: (e) =>
         $('#settings').hide()
+        e.stopPropagation()
+        @config.started = true
         @draw()
     $('#drawing').on
       mousewheel: (e, delta, deltaX, deltaY) =>
@@ -272,26 +281,49 @@ class Maze
           @config.timeout = window.setTimeout(@draw, 20)
     $('html').on
       mousedown: (event) =>
-        left = @config.border.left+$('#drawing').position().left
-        top = @config.border.top+$('#drawing').position().top
-        range_x =  [0..@config.horizontal.drawn]
-        range_y =  [0..@config.vertical.drawn]
-        inx = event.clientX-left in range_x
-        iny = event.clientY-top in range_y
-        if inx and iny
-          console.log "Clicked in the grid"
-          @config.mousein = event
-        else
-          console.log "Clicked outside the grid"
-          # mouseout = event
+        if @config.started
+          left = @config.border.left+$('#drawing').position().left
+          top = @config.border.top+$('#drawing').position().top
+          range_x =  [0..@config.horizontal.drawn]
+          range_y =  [0..@config.vertical.drawn]
+          inx = event.clientX-left in range_x
+          iny = event.clientY-top in range_y
+          if inx and iny
+            console.log "Clicked in the grid"
+            @config.mousein = event
+          else
+            @config.mouseout = event
+            console.log "Clicked outside the grid"
+            # mouseout = event
       mousemove: (event) =>
         if @config.mousein
           @config.horizontal.offset += (event.clientX - @config.mousein.clientX)
           @config.vertical.offset += (event.clientY - @config.mousein.clientY)
           @config.mousein = event
           @config.timout = setTimeout @draw, 20
+        if @config.mouseout
+          xdiff = event.clientX - @config.mouseout.clientX
+          if xdiff < 0  or @config.border.left + @config.horizontal.drawn + xdiff < @config.context.width()
+            @config.border.left += xdiff
+          if @config.border.left+xdiff < 1
+           @config.border.left = 1
+
+
+          ydiff = event.clientY - @config.mouseout.clientY
+          if ydiff < 0 or @config.border.top + @config.vertical.drawn + ydiff < @config.context.height()
+            @config.border.top += ydiff
+          if @config.border.top+ydiff < 1
+           @config.border.top = 1
+
+
+          # @config.border.top += (event.clientY - @config.mouseout.clientY)
+          # @config.border.top = 1 if @config.border.top < 1
+          @config.mouseout = event
+          @config.timout = setTimeout @draw, 20
       mouseup: (event) =>
+        console.log "Mousup"
         @config.mousein = null
+        @config.mouseout = null
 
 
 
