@@ -124,11 +124,11 @@ class Maze
     background_color: "#FFF"
     horizontal:
       offset: 0
-      cells: 50
+      cells: 5
       drawn: 0
     vertical:
       offset: 0
-      cells: 50
+      cells: 5
       drawn: 0
     border:
       left: 60
@@ -377,6 +377,15 @@ class Maze
     console.log string
     console.log "Grid is: #{@grid.length}x#{@grid[0].length}"
 
+  inRectangle: (event) =>
+    left = @config.border.left+$('#drawing').position().left
+    top = @config.border.top+$('#drawing').position().top
+    range_x =  [0..@config.horizontal.drawn]
+    range_y =  [0..@config.vertical.drawn]
+    inx = event.clientX-left in range_x
+    iny = event.clientY-top in range_y
+    return inx and iny
+
   createHandlers: =>
     $('#save').on
       click: (e) =>
@@ -396,32 +405,27 @@ class Maze
     $('html').on
       mousedown: (event) =>
         if @config.started
-          left = @config.border.left+$('#drawing').position().left
-          top = @config.border.top+$('#drawing').position().top
-          range_x =  [0..@config.horizontal.drawn]
-          range_y =  [0..@config.vertical.drawn]
-          inx = event.clientX-left in range_x
-          iny = event.clientY-top in range_y
-          if inx and iny
-            console.log "Clicked in the grid"
-            X =
+          if @inRectangle(event)
             @config.mousein = event
           else
             @config.mouseout = event
             console.log "Clicked outside the grid"
             # mouseout = event
       mousemove: (event) =>
+        # console.log "Mousemove"
         if @config.mousein
           @config.horizontal.offset += (event.clientX - @config.mousein.clientX)
           @config.vertical.offset += (event.clientY - @config.mousein.clientY)
           @config.mousein = event
           @config.timout = setTimeout @draw, 20
+          @config.moved = true
         if @config.mouseout
           xdiff = event.clientX - @config.mouseout.clientX
           if xdiff < 0  or @config.border.left + @config.horizontal.drawn + xdiff < @config.context.width()
             @config.border.left += xdiff
           if @config.border.left+xdiff < 1
            @config.border.left = 1
+          @config.moved = true
 
 
           ydiff = event.clientY - @config.mouseout.clientY
@@ -437,8 +441,18 @@ class Maze
           @config.timout = setTimeout @draw, 20
       mouseup: (event) =>
         console.log "Mousup"
+        if @inRectangle(event)
+          unless @config.moved
+            left = @config.border.left+$('#drawing').position().left
+            top = @config.border.top+$('#drawing').position().top
+            x = Math.floor((event.clientX-left-@config.horizontal.offset)/@config.gridsize)+1
+            y = Math.floor((event.clientY-top-@config.vertical.offset)/@config.gridsize)+1
+            console.log "Clicked in the grid on row #{event.clientX},#{event.clientY} -> #{x},#{y}"
+            @grid[x][y].type = !@grid[x][y].type
+            @draw()
         @config.mousein = null
         @config.mouseout = null
+        @config.moved = false
 
 
 
